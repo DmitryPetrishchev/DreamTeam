@@ -1,0 +1,16 @@
+#https://travis-ci.org/DmitryPetrishchev/DreamTeam
+language: python
+python:
+    - 3.5
+    - 3.6
+
+install:
+    - pip install -r TopProject/requirements/base.txt
+
+script:
+    - pylint TopProject/todo
+
+sudo: false
+
+matrix:
+    fast_finish: true
