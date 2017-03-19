@@ -1,5 +1,7 @@
 from copy import deepcopy
 from datetime import date
+from yaml import load, Loader
+
 from task import Task, available_states
 
 class Roadmap(object):
@@ -19,9 +21,18 @@ class Roadmap(object):
             raise AttributeError('State \"' + new_state + '\" doesn\'t exist')
 
     @classmethod
-    def CreateFromFile(cls, path):
+    def create_from_file(cls, path):
         '''Парсит файл типа yaml и возвращает экземпляр Roadmap'''
-        pass
+
+        with open(path, 'rt', encoding='utf-8') as input:
+            package = load(input, Loader=Loader)
+            dataset = package.get('dataset')
+            if not isinstance(dataset, list):
+                raise ValueError('wrong format')
+           
+        rm = Roadmap() 
+        rm.tasks = [Task(t[0], t[2], t[1]) for t in dataset]
+        return rm
 
     def save(self, path):
         '''Сохраняет экземпляр Roadmap в yaml файл'''
