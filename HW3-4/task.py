@@ -39,3 +39,7 @@ class Task(object):
     def is_failed(self):
         return self.state == 'in_progress' and self.estimate < date.today()
 
+    @property
+    def is_critical(self):
+        return self.state == 'in_progress' and self.remaining < timedelta(days=3)
+
