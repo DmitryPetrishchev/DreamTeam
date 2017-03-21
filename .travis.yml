@@ -1,14 +1,16 @@
-#https://travis-ci.org/DmitryPetrishchev/DreamTeam
 language: python
 python:
+    - 3.4
     - 3.5
-    - 3.6
 
 install:
-    - pip install -r TopProject/requirements/base.txt
+    - pip install -r requirements/base.txt
 
-script:
-    - pylint TopProject/todo
+script:    
+        # пока не ясно, что это делает 
+    - pylint TopProject/todo   
+        # чекает все файлы с расширением .py                   
+    - find . -iname "*.py" |xargs pylint   
 
 sudo: false
 
