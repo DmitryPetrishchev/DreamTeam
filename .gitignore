@@ -1,0 +1,6 @@
+# ингнорирование файлов .directory во всех папках
+# игнорирование папок со скомпилированным питоном и доп файлов jupyter notebook
+
+*.directory
+__pycache__*
+.ipynb_checkpoints*
