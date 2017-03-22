@@ -51,4 +51,4 @@ class Task(object):
     @property
     def is_critical(self):
         """This function checks critical tasks."""
-        return self.is_failed() and self.remaining < timedelta(days=3)
+        return self.is_failed() or self.remaining < timedelta(days=3)
