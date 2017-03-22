@@ -20,7 +20,7 @@ class Roadmap(object):
 
     def filter(self, state):
         """This function returns tasks with setted state."""
-        if state in self.__availableStates:
+        if state in Task.__availableStates:
             return list(filter((lambda x: x.state() == state), self.tasks))
         else:
             raise AttributeError("State '%s' does not exist" % state)
