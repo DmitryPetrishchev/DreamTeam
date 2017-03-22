@@ -1,39 +1,42 @@
+"""This module realise class "Roadmap"."""
 from copy import deepcopy
 from datetime import date
-from yaml import load, Loader
+from task import Task
+from yaml import load
+from yaml import Loader
 
-from task import Task, available_states
 
 class Roadmap(object):
-    '''Doc of class Roadmap'''
+    """This is class "Roadmap"."""
 
-    def __init__(self, tasks = []):
+    def __init__(self, tasks=[]):
+        """This is constructor of class."""
         self.tasks = deepcopy(tasks)
 
     @property
     def today(self):
+        """This function returns today's tasks."""
         return [t for t in self.tasks if t.estimate == date.today()]
 
     def filter(self, state):
-        if state in available_states:
-            return [t for t in self.tasks if t.state == state]
+        """This function returns tasks with setted state."""
+        if state in self.__availableStates:
+            return list(filter((lambda x: x.state() == state), self.tasks))
         else:
-            raise AttributeError('State \"' + new_state + '\" doesn\'t exist')
+            raise AttributeError("State '%s' does not exist" % state)
 
     @classmethod
     def create_from_file(cls, path):
-        '''Парсит файл типа yaml и возвращает экземпляр Roadmap'''
-
-        with open(path, 'rt', encoding='utf-8') as input:
+        """This function creates example of class from .yaml file."""
+        with open(path, "rt", encoding="utf-8") as input:
             package = load(input, Loader=Loader)
-            dataset = package.get('dataset')
+            dataset = package.get("dataset")
             if not isinstance(dataset, list):
-                raise ValueError('wrong format')
-           
-        rm = Roadmap() 
+                raise ValueError("wrong format")
+        rm = Roadmap()
         rm.tasks = [Task(t[0], t[2], t[1]) for t in dataset]
         return rm
 
     def save(self, path):
-        '''Сохраняет экземпляр Roadmap в yaml файл'''
+        """This function saves example in file."""
         pass
