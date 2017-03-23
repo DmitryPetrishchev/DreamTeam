@@ -1,45 +1,54 @@
-from datetime import date, timedelta
+"""This module realise class "Task"."""
+from datetime import date
+from datetime import timedelta
 
-available_states = { 'in_progress', 'ready' }
 
 class Task(object):
-    '''Doc of class Task'''
+    """This is class "Task"."""
 
-    def __init__(self, title, estimate, state = 'in_progress'):
+    def __init__(self, title, estimate, state="in_progress"):
+        """This is constructor of class."""
         self.title = title
         self.estimate = estimate
         self.state = state
 
     def __str__(self):
-        return self.title + ' до ' + str(self.estimate) + '. Статус: ' + self.state
+        """This function sets string format of class."""
+        return self.title + " until " + str(self.estimate) + ". Status: " + self.state
 
-    @property           #state.getter создается автоматически
+    @property           # state.getter создается автоматически
     def state(self):
-        '''Doc of property state'''
+        """This function returns state of task."""
         return self._state
 
+    __availableStates = {"in_progress", "ready"}
+
     @state.setter
-    def state(self, new_state):
-        if new_state in available_states:
-            self._state = new_state
+    def state(self, newState):
+        """This function checks available states of task."""
+        if newState in self.__availableStates:
+            self._state = newState
         else:
-            raise AttributeError('State \"' + new_state + '\" doesn\'t exist')
+            raise AttributeError("State '%s' does not exist" % newState)
 
     def ready(self):
-        self.state = 'ready'
+        """This function changes state of task to "ready"."""
+        self.state = "ready"
 
     @property
     def remaining(self):
-        if self.state == 'in_progress':
+        """This function calculates remaining time of task."""
+        if self.state == "in_progress":
             return self.estimate - date.today()
         else:
             return timedelta(0)
 
     @property
     def is_failed(self):
-        return self.state == 'in_progress' and self.estimate < date.today()
+        """This function checks failed tasks."""
+        return self.state == "in_progress" and self.estimate < date.today()
 
     @property
     def is_critical(self):
-        return self.state == 'in_progress' and self.remaining < timedelta(days=3)
-
+        """This function checks critical tasks."""
+        return self.is_failed() or self.remaining < timedelta(days=3)
