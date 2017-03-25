@@ -52,4 +52,4 @@ class WSGIApp(object):
             page += '\t<li>' + str(t) + '</li>\n'
         page += '</ul>'
 
-        yield page.encode('utf-8') 
+        yield page.encode('utf-8')

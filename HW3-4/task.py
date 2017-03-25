@@ -1,6 +1,5 @@
 """This module realise class "Task"."""
-from datetime import date
-from datetime import timedelta
+from datetime import date, timedelta
 
 
 class Task(object):
@@ -10,9 +9,10 @@ class Task(object):
         """This is constructor of class."""
         self.title = title
         self.estimate = estimate
+        self._state = None
         self.state = state
 
-    def __str__(self):
+    def __repr__(self):
         """This function sets string format of class."""
         return self.title + " until " + str(self.estimate) + ". Status: " + self.state
 
@@ -21,15 +21,15 @@ class Task(object):
         """This function returns state of task."""
         return self._state
 
-    __availableStates = {"in_progress", "ready"}
+    available_states = ("in_progress", "ready")
 
     @state.setter
-    def state(self, newState):
+    def state(self, value):
         """This function checks available states of task."""
-        if newState in self.__availableStates:
-            self._state = newState
+        if value in self.available_states:
+            self._state = value
         else:
-            raise AttributeError("State '%s' does not exist" % newState)
+            raise AttributeError("State '%s' does not exist" % value)
 
     def ready(self):
         """This function changes state of task to "ready"."""
@@ -51,4 +51,5 @@ class Task(object):
     @property
     def is_critical(self):
         """This function checks critical tasks."""
-        return self.is_failed() or self.remaining < timedelta(days=3)
+        return (self.is_failed or self.remaining < timedelta(days=3)
+                and self.state == "in_progress")

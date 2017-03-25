@@ -6,11 +6,11 @@ python:
 install:
     - pip install -r requirements/base.txt
 
-script:    
-        # пока не ясно, что это делает 
-    - pylint TopProject/todo   
-        # чекает все файлы с расширением .py                   
-    - find . -iname "*.py" |xargs pylint   
+script:
+        # пока не ясно, что это делает
+    - pylint TopProject/todo
+        # чекает все файлы с расширением .py
+    - find . -iname "*.py" |xargs pylint --rcfile .pylintrc   
 
 sudo: false
 
