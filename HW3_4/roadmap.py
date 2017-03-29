@@ -1,4 +1,4 @@
-"""Module realise class "Roadmap"."""
+"""Module provides class "Roadmap"."""
 from copy import deepcopy
 from datetime import date
 from task import Task
@@ -6,11 +6,9 @@ from yaml import load, Loader, dump, Dumper
 
 
 class Roadmap(object):
-    """Class "Roadmap"."""
 
     def __init__(self, tasks: "list of Task's"=()):
-        """Constructor of class."""
-        if all((isinstance(t, Task) for t in tasks)):
+        if all([isinstance(t, Task) for t in tasks]):
             self.tasks = deepcopy(list(tasks))
         else:
             raise ValueError("All items in 'tasks' must have 'Task' type.")
@@ -46,6 +44,8 @@ class Roadmap(object):
         return rmp
 
     def save(self, path):
-        """Save instance of class in .yaml file."""
+        """Write instance of class to .yaml file."""
+        # запакуем класс в простой формат
+        package = {'dataset' : [[t.title, t.state, t.estimate] for t in self.tasks]}
         with open(path, "wt", encoding="utf-8") as ostream:
-            dump(self, ostream, Dumper=Dumper, default_flow_style=False)
+            dump(package, ostream, Dumper=Dumper, default_flow_style=False, allow_unicode=True)
