@@ -4,3 +4,5 @@
 *.directory
 __pycache__*
 .ipynb_checkpoints*
+
+*test_output.yml
