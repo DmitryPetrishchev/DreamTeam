@@ -22,7 +22,7 @@ class Task(object):
     def __repr__(self) -> str:
         return self.title + " until " + str(self.estimate) + ". Status: " + self.state
 
-    @property           # state.getter создается автоматически
+    @property
     def state(self) -> str:
         return self._state
 

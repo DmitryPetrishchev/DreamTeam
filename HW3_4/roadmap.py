@@ -8,10 +8,10 @@ from yaml import load, Loader, dump, Dumper
 class Roadmap(object):
 
     def __init__(self, tasks: "list of Task's"=()):
-        if all([isinstance(t, Task) for t in tasks]):
+        if all((isinstance(t, Task) for t in tasks)):
             self.tasks = deepcopy(list(tasks))
         else:
-            raise ValueError("All items in 'tasks' must have 'Task' type.")
+            raise TypeError("All items in 'tasks' must have 'Task' type.")
 
     def __repr__(self) -> str:
         string = ""
@@ -21,15 +21,15 @@ class Roadmap(object):
 
     @property
     def today(self) -> list:
-        """Return today's tasks."""
+        """Return list of today's tasks."""
         return [t for t in self.tasks if t.estimate == date.today()]
 
     def filter(self, state: str) -> list:
-        """Return tasks with setted state."""
+        """Return list of tasks with setted state."""
         if state in Task.available_states:
             return [t for t in self.tasks if t.state == state]
         else:
-            raise AttributeError("State '%s' does not exist" % state)
+            raise ValueError("State '%s' does not exist" % state)
 
     @classmethod
     def create_from_file(cls, path):
@@ -45,7 +45,6 @@ class Roadmap(object):
 
     def save(self, path):
         """Write instance of class to .yaml file."""
-        # запакуем класс в простой формат
         package = {'dataset' : [[t.title, t.state, t.estimate] for t in self.tasks]}
         with open(path, "wt", encoding="utf-8") as ostream:
             dump(package, ostream, Dumper=Dumper, default_flow_style=False, allow_unicode=True)
