@@ -1,55 +1,53 @@
 from urllib.parse import parse_qs
-
 from roadmap import Roadmap
 
 class WSGIApp(object):
 
-    default_headers = [
-        ('Content-Type', 'text/html; charset=utf8'),
-        ('Server', 'DreamTeam server'),
-    ]
-
-    def __init__(self, environment, start_response_callback):
+    def __init__(self, environment, start_response):
         self.environment = environment
-        self.start_response = start_response_callback
+        self.start_response = start_response
+        self._params = None
 
     @property
     def params(self):
-        params = getattr(self, '_params', None)
-        if not params:      # если параметров ещё нет, то парсим их из сроки запроса
-            query_string = self.environment.get('QUERY_STRING', '')
-            params = {
-                key: value if len(value) > 1 else value[0]
-                for key, value in parse_qs(query_string).items()
-            }
-            setattr(self, '_params', params)
-        return params
-
+        if not self._params:      # если параметров ещё нет, то парсим их из сроки запроса
+            query_string = self.environment.get("QUERY_STRING", "")
+            self._params = {key : value if len(value) > 1 else value[0]
+                            for (key, value) in parse_qs(query_string).items()}
+        return self._params
 
     def __iter__(self):
-        self.start_response('200 OK', self.default_headers)
+        status = "200 OK"
+        headers = [("Content-Type", "text/html; charset=utf8"),
+                   ("Server", "DreamTeam server")]
 
-        rm = Roadmap.create_from_file('dataset.yml')
+        self.start_response(status, headers)
 
-        task_type = self.params.get('type', 'critic')
+        rmp = Roadmap.create_from_file("dataset.yml")
+        task_type = self.params.get("type", "critical")
 
-        if task_type == 'ready':
-            page = 'Выполненные'
-            tasks = rm.filter('ready')
-        elif task_type == 'in_progress':
-            page = 'Текущие'
-            tasks = rm.filter('in_progress')
-        elif task_type == 'failed':
-            page = 'Проваленые'
-            tasks = [t for t in rm.tasks if t.is_failed]
+        if task_type == "ready":
+            page = "Выполненные"
+            tasks = rmp.filter("ready")
+        elif task_type == "in_progress":
+            page = "Текущие"
+            tasks = rmp.filter("in_progress")
+        elif task_type == "failed":
+            page = "Проваленные"
+            tasks = [t for t in rmp.tasks if t.is_failed]
+        elif task_type == "critical":
+            page = "Критические"
+            tasks = [t for t in rmp.tasks if t.is_critical]
         else:
-            page = 'Критические'
-            tasks = [t for t in rm.tasks if t.is_critical]
+            page = "<h2>Ошибка:</h2>" + \
+                   "<p>Упс, такая страница не существует. " + \
+                   "Возможные значения /?type = {ready, in_progress, failed, critical}</p>"
+            yield page.encode("utf-8")
 
-        page = '<h2>' + page + ' задачи:</h2>\n\n'
-        page += '<ul>\n'
+        page = "<h2>" + page + " задачи:</h2>\n\n"
+        page += "<ul>\n"
         for t in tasks:
-            page += '\t<li>' + str(t) + '</li>\n'
-        page += '</ul>'
+            page += "\t<li>" + str(t) + "</li>\n"
+        page += "</ul>"
 
-        yield page.encode('utf-8')
+        yield page.encode("utf-8")
