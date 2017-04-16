@@ -8,9 +8,9 @@ install:
 
 script:
         # пока не ясно, что это делает
-    - pylint TopProject/todo
+    - pylint TopProject/planner
         # чекает все файлы с расширением .py
-    - find . -iname "*.py" |xargs pylint --rcfile .pylintrc   
+    - find . -iname "*.py" |xargs pylint --rcfile .pylintrc
 
 sudo: false
 
