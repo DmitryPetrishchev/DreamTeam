@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block body %}
+  <div class="container">
+    <div class="row centered">
+      <h2 class="text-center">{{ title }}:</h2>
+    </div>
+    <form action="" method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-group">
+          {% if form.is_bound %}
+          <h3>{{ field.errors }}</h3>
+          {% endif %}
+          
+          {{ field.label_tag }}
+          {{ field }}
+        </div>
+      {% endfor %}
+      <button class="btn btn-lg btn-primary btn-block" type="submit">Сохранить</button>
+    </form>
+  </div>
+{% endblock %}

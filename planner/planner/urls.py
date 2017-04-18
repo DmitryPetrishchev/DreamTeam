@@ -20,5 +20,5 @@ from src.views import task_input_form, task_edit_form
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^task/$', task_input_form),
-    url(r'^edit_task/$', task_edit_form)
+    url(r'^edit/$', task_edit_form)
 ]

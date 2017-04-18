@@ -1,17 +1,26 @@
-from django import forms
 from datetime import date
+from django import forms
 
 class TaskInputForm(forms.Form):
-    title = forms.CharField(max_length=20, label='Название')
-    estimate = forms.DateTimeField(widget=CalendarWidget, label='Срок выполнения')
+    title = forms.CharField(widget=forms.TextInput(attrs={
+        'class': 'form-control', 'placeholder': 'Введите задачу'}), label='Задача')
+    estimate = forms.DateField(widget=forms.SelectDateWidget(attrs={
+        'class': 'form-control'}), label='Срок выполнения')
 
     def clean_estimate(self):
         if self.cleaned_data['estimate'] < date.today():
-            raise forms.ValidationError('Проверьте значение поля')
+            raise forms.ValidationError('Введите правильную дату.')
 
 class TaskEditForm(forms.Form):
-    title = forms.CharField(max_length=20, label='Название')
-    available_states = ('ready', 'in_progress')
-    output = ('Выполняется', 'Выполнена')
-    state = forms.ChoiceField(zip(available_states, output), label='Статус')
-    estimate = forms.DateTimeField(label='Срок выполнения')
+    title = forms.CharField(widget=forms.TextInput(attrs={
+        'class': 'form-control', 'placeholder': 'Введите задачу'}), label='Задача')
+    available_states = ('in_progress', 'ready')
+    visible_states = ('Выполняется', 'Выполнена')
+    state = forms.CharField(widget=forms.Select(attrs={
+        'class': 'form-control'}, choices=zip(available_states, visible_states)), label='Статус задачи')
+    estimate = forms.DateField(widget=forms.SelectDateWidget(attrs={
+        'class': 'form-control'}), label='Срок выполнения')
+
+    def clean_estimate(self):
+        if self.cleaned_data['estimate'] < date.today():
+            raise forms.ValidationError('Введите правильную дату.')
