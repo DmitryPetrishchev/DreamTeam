@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Созданная форма{% endblock %}
+
+{%block body %}
+  <div class="container">
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover">
+        <thead>
+          <tr class="active">
+            {% for field in form %}
+              <th>{{ field.label_tag }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% if form.is_critical %}
+            <tr class="danger">
+          {% else %}
+            <tr>
+          {% endif %}
+          {% for field in form %}
+            <td>{{ field.data }}</td>
+          {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

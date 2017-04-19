@@ -8,7 +8,7 @@ install:
 
 script:
         # пока не ясно, что это делает
-    - pylint TopProject/planner
+    - pylint planner/planner
         # чекает все файлы с расширением .py
     - find . -iname "*.py" |xargs pylint --rcfile .pylintrc
 

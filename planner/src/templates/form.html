@@ -4,19 +4,19 @@
 
 {% block body %}
   <div class="container">
-    <div class="row centered">
-      <h2 class="text-center">{{ title }}:</h2>
-    </div>
     <form action="" method="post">
+      <h2 class="text-center">{{ title }}:</h2>
       {% csrf_token %}
       {% for field in form %}
-        <div class="form-group">
-          {% if form.is_bound %}
-          <h3>{{ field.errors }}</h3>
-          {% endif %}
-          
-          {{ field.label_tag }}
-          {{ field }}
+        {% if form.is_bound and field.errors %}
+          <div class="form-group has-error">
+        {% else %}
+          <div class="form-group">
+        {% endif %}
+
+        {{ field.label_tag }}
+        {{ field }}
+        <p class="help-block">{{ field.errors }}</p>
         </div>
       {% endfor %}
       <button class="btn btn-lg btn-primary btn-block" type="submit">Сохранить</button>

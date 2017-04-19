@@ -1,3 +1,5 @@
 from django.contrib import admin
+from src.models import Task, Roadmap
 
-# Register your models here.
+admin.site.register(Task)
+admin.site.register(Roadmap)
