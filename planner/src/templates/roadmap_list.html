@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Списки задач
+{% endblock %}
+
+{% block body %}
+  <div class="container">
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover">
+        <caption class="text-center">Списки задач</caption>
+        <thead>
+          <tr class="active">
+            <th class="col-xs-6 col-sm-6 col-md-6 col-lg-6">Название</th>
+            <th class="col-xs-5 col-sm-6 col-md-6 col-lg-6">Число задач</th>
+            <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for roadmap in roadmaps %}
+            <tr>
+              <td style="word-break: break-all">{{ roadmap.title }}</td>
+              <td style="word-break: break-all">{{ roadmap.tasks.count }}</td>
+              <td>
+                {% url 'src:roadmap_tasks' roadmap.id as tasks_url %}
+                {% url 'src:roadmap_delete' roadmap.id as delete_url %}
+                <div class="btn-toolbar" role="toolbar">
+                  <a class="btn btn-primary btn-block btn-xs" href="{{ tasks_url }}">Просмотр задач</a>
+                  <a class="btn btn-danger btn-block btn-xs" href="{{ delete_url }}">Удалить</a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% url 'src:roadmap_create' as create_url %}
+    <a class="btn btn-success" href="{{ create_url }}">Создать список</a>
+  </div>
+{% endblock %}

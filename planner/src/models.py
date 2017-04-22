@@ -1,7 +1,8 @@
+from datetime import date, timedelta
 from django.db import models
 
 class Roadmap(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=64)
 
     def __str__(self):
         return ("Список задач: %s\n" +
@@ -9,9 +10,13 @@ class Roadmap(models.Model):
                 (self.title, self.tasks.count())
 
 class Task(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=64)
     estimate = models.DateField()
-    state = models.CharField(max_length=11)
+    available_states = (
+        ('in_progress', 'Выполняется'),
+        ('ready', 'Выполнена')
+    )
+    state = models.CharField(max_length=11, choices=available_states)
     roadmap = models.ForeignKey(
         Roadmap,
         models.CASCADE,
@@ -24,3 +29,13 @@ class Task(models.Model):
                 "Статус: %s\n" +
                 "Выполнить до: %s\n") % \
                 (self.title, self.state, self.estimate)
+
+    @property
+    def is_failed(self):
+        return (self.state == "in_progress" and
+                self.estimate < date.today())
+
+    @property
+    def is_critical(self):
+        return (self.is_failed or self.estimate - date.today() <
+                timedelta(days=3) and self.state == "in_progress")

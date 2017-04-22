@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Содержимое запроса{% endblock %}
+
+{%block body %}
+  <div class="container">
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover">
+        <tbody>
+          {% for value in object %}
+            <th>{{ value }}{{ object.value }}</th>
+          {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

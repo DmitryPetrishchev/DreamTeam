@@ -9,6 +9,27 @@
     <link rel="stylesheet" href="{% static "css/font-awesome.css" %}">
   </head>
 <body>
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        {% url 'src:main' as main %}
+        <a href="{{ main }}" class="navbar-brand">Planner</a>
+      </div>
+      <div>
+        <ul class="nav navbar-nav">
+          <li><a href="{{ main }}">Главная</a></li>
+          {% url 'src:roadmap_create' as rmp_create %}
+          <li><a href="{{ rmp_create }}">Создать список</a></li>
+          {% url 'src:task_create' as task_create %}
+          <li><a href="{{ task_create }}">Создать задачу</a></li>
+          {% url 'src:roadmap_list' as roadmap_list %}
+          <li><a href="{{ roadmap_list }}">Списки</a></li>
+          {% url 'src:task_list' as task_list %}
+          <li><a href="{{ task_list }}">Задачи</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
   {% block body %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Список задач{% endblock %}
+
+{%block body %}
+  <div class="container">
+    <div class="row">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <caption class="text-center">Список задач</caption>
+          <thead>
+            <tr class="active">
+              <th class="col-xs-5 col-sm-5 col-md-5 col-lg-5">Задача</th>
+              <th class="col-xs-3 col-sm-3 col-md-3 col-md-3">Статус задачи</th>
+              <th class="col-xs-3 col-sm-3 col-md-3 col-md-3">Срок выполнения</th>
+              <th class="col-xs-1 col-sm-1 col-md-1 col-md-1"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+              {% if task.is_failed %}
+                <tr class="danger">
+              {% else %}
+                {% if task.is_critical %}
+                  <tr class="warning">
+                {% else %}
+                  {% if task.state == "ready" %}
+                    <tr class="success">
+                  {% else %}
+                    <tr>
+                  {% endif %}
+                {% endif %}
+              {% endif %}
+              <td style="word-break: break-all">{{ task.title }}</td>
+              <td style="word-break: break-all">{{ task.get_state_display }}</td>
+              <td style="word-break: break-all">{{ task.estimate }}</td>
+              <td>
+                {% url 'src:task_delete' task.id as delete_url %}
+                {% url 'src:task_edit' task.id as edit_url %}
+                <div class="btn-toolbar" role="toolbar">
+                  <a class="btn btn-primary btn-block btn-xs" href="{{ edit_url }}">Редактировать</a>
+                  <a class="btn btn-danger btn-block btn-xs" href="{{ delete_url }}">Удалить</a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        {% url 'src:task_create' as create_url %}
+        <a class="btn btn-success" href="{{ create_url }}">Создать задачу</a>
+        {% if return_path %}
+        <a class="btn btn-primary btn-lg" href="{{ return_path }}">Назад</a>
+        {% endif %}
+      </div>
+      <div class="col-xs-7 col-xs-offset-1 col-sm-5 col-sm-offset-3 col-md-4 col-md-offset-4 col-lg-3 col-lg-offset-5">
+        <div class="table-responsive">
+          <table class="table">
+            <tbody>
+              <tr>
+                <td class="success">Выполнена</td>
+                <td class="warning">Критична</td>
+                <td class="danger">Провалена</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <br />
+  </div>
+{% endblock %}
