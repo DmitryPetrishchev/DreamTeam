@@ -14,8 +14,10 @@
           <div class="form-group">
         {% endif %}
 
-        {{ field.label_tag }}
-        {{ field }}
+        {% if not field.is_hidden %}
+          {{ field.label_tag }}
+        {% endif %}
+          {{ field }}
         <p class="help-block">{{ field.errors }}</p>
         </div>
       {% endfor %}

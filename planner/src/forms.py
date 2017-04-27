@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from src.models import Task, Roadmap
 
 class TaskForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, hidden=False, **kwargs):
         super(TaskForm, self).__init__(*args, **kwargs)
         self.fields['title'].widget.attrs.update({
             'class': 'form-control', 'placeholder': 'Введите задачу',
@@ -16,6 +16,10 @@ class TaskForm(forms.ModelForm):
         self.fields['roadmap'].widget.attrs.update({
             'class': 'form-control'
         })
+
+        if hidden:
+            self.fields['state'].widget = forms.HiddenInput()
+
     class Meta:
         model = Task
         fields = '__all__'
@@ -52,6 +56,7 @@ class RoadmapForm(forms.ModelForm):
             'class': 'form-control', 'placeholder': 'Введите название списка задач',
             'maxlength': '64'
         })
+
     class Meta:
         model = Roadmap
         fields = '__all__'
