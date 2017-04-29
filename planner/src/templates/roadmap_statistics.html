@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load filters %}
 
 {% block title %}
   Статистика задач
@@ -20,20 +21,18 @@
               </tr>
             </thead>
             <tbody>
-              {% for year, weeks in years %}
-                {% if weeks %}
+              {% for year, weeks in data|sort %}
+                <tr>
+                  <td colspan="4" class="text-center info">{{ year }}</td>
+                </tr>
+                {% for week, data in weeks|sort %}
                   <tr>
-                    <td colspan="4" class="text-center info">{{ year }}</td>
+                    <td>{{ week }}</td>
+                    <td>{{ data.dates }}</td>
+                    <td>{{ data.created }}</td>
+                    <td>{{ data.solved }}</td>
                   </tr>
-                  {% for week in weeks %}
-                    <tr>
-                      <td>{{ week.week }}</td>
-                      <td>{{ week.dates }}</td>
-                      <td>{{ week.created }}</td>
-                      <td>{{ week.solved }}</td>
-                    </tr>
-                  {% endfor %}
-                {% endif %}
+                {% endfor %}
               {% endfor %}
             </tbody>
           </table>
@@ -50,18 +49,16 @@
               </tr>
             </thead>
             <tbody>
-              {% for year, months in scores %}
-                {% if months %}
+              {% for year, months in points|sort %}
+                <tr>
+                  <td colspan="2" class="text-center info">{{ year }}</td>
+                </tr>
+                {% for month in months %}
                   <tr>
-                    <td colspan="2" class="text-center info">{{ year }}</td>
+                    <td>{{ month.month }}</td>
+                    <td>{{ month.points }}</td>
                   </tr>
-                  {% for month in months %}
-                    <tr>
-                      <td>{{ month.month }}</td>
-                      <td>{{ month.points }}</td>
-                    </tr>
-                  {% endfor %}
-                  {% endif %}
+                {% endfor %}
               {% endfor %}
             </tbody>
           </table>
