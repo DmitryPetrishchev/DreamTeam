@@ -1,6 +1,7 @@
 from django import template
 
 register = template.Library()
+
 @register.filter(name='sort')
 def sort(value):
     if isinstance(value, dict):

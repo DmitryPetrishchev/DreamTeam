@@ -8,63 +8,81 @@
 {% block body %}
   <div class="container">
     <div class="row">
-      <div class="col-md-6">
-        <div class="table-responsive">
-          <table class="table table-bordered table-hover">
-            <caption class="text-center">Созданные/Решенные</caption>
-            <thead>
-              <tr class="active">
-                <th class="col-md-1">Неделя</th>
-                <th class="col-md-5">Интервал</th>
-                <th class="col-md-3">Создано</th>
-                <th class="col-md-3">Решено</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for year, weeks in data|sort %}
-                <tr>
-                  <td colspan="4" class="text-center info">{{ year }}</td>
-                </tr>
-                {% for week, data in weeks|sort %}
-                  <tr>
-                    <td>{{ week }}</td>
-                    <td>{{ data.dates }}</td>
-                    <td>{{ data.created }}</td>
-                    <td>{{ data.solved }}</td>
+      <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+        <div class="panel panel-info">
+          <div class="panel-heading text-center">
+            <h4 class="text-center">Созданные/Решенные</h4>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover">
+                <thead>
+                  <tr class="active">
+                    <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Неделя</th>
+                    <th class="col-xs-5 col-sm-5 col-md-5 col-lg-5">Интервал</th>
+                    <th class="col-xs-3 col-sm-3 col-md-3 col-lg-3">Создано</th>
+                    <th class="col-xs-3 col-sm-3 col-md-3 col-lg-3">Решено</th>
                   </tr>
-                {% endfor %}
-              {% endfor %}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {% for year, weeks in data|sort %}
+                    <tr>
+                      <td colspan="4" class="text-center info">{{ year }}</td>
+                    </tr>
+                    {% for week, data in weeks|sort %}
+                      <tr>
+                        <td>{{ week }}</td>
+                        <td>{{ data.dates }}</td>
+                        <td>{{ data.created }}</td>
+                        <td>{{ data.solved }}</td>
+                      </tr>
+                    {% endfor %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="table-responsive">
-          <table class="table table-bordered table-hover">
-            <caption class="text-center">Очки</caption>
-            <thead>
-              <tr class="active">
-                <td class="col-md-6">Месяц</td>
-                <td class="col-md-6">Зачислено</td>
-              </tr>
-            </thead>
-            <tbody>
-              {% for year, months in points|sort %}
-                <tr>
-                  <td colspan="2" class="text-center info">{{ year }}</td>
-                </tr>
-                {% for month in months %}
-                  <tr>
-                    <td>{{ month.month }}</td>
-                    <td>{{ month.points }}</td>
+      <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+        <div class="panel panel-info">
+          <div class="panel-heading text-center">
+            <h4 class="text-center">Очки</h4>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover">
+                <thead>
+                  <tr class="active">
+                    <td class="col-xs-6 col-sm-6 col-md-6 col-lg-6">Месяц</td>
+                    <td class="col-xs-6 col-sm-6 col-md-6 col-lg-6">Зачислено</td>
                   </tr>
-                {% endfor %}
-              {% endfor %}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {% for year, months in points|sort %}
+                    <tr>
+                      <td colspan="2" class="text-center info">{{ year }}</td>
+                    </tr>
+                    {% for month in months %}
+                      <tr>
+                        <td>{{ month.month }}</td>
+                        <td>{{ month.points }}</td>
+                      </tr>
+                    {% endfor %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <a class="btn btn-primary" href="{{ return_path }}">Назад</a>
+    <div class="row">
+      <div class="col-md-12">
+        <a class="btn btn-primary" href="{{ return_path }}">
+          <i class="fa fa-history"></i> Назад
+        </a>
+      </div>
+    </div>
   </div>
 {% endblock %}

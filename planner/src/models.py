@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 from django.db import models
-from django.db.models import F, Max, ExpressionWrapper
+from django.db.models import ExpressionWrapper, F, Max
 
 class Roadmap(models.Model):
     title = models.CharField(max_length=64)
@@ -54,13 +54,15 @@ class Task(models.Model):
 
     @property
     def calc_points(self):
-        tasks = Task.objects.annotate(interval=ExpressionWrapper(
-            F('estimate') - F('create_date'),
-            output_field=models.DurationField()
-        ))
+        tasks = Task.objects.annotate(
+            interval=ExpressionWrapper(
+                F('estimate') - F('create_date'),
+                output_field=models.DurationField()
+            )
+        )
         max_estimate = tasks.aggregate(
             max_estimate=Max('interval')
-            ).get('max_estimate')
+        ).get()
         points = (date.today() - self.create_date) / \
                  (self.estimate - self.create_date) + \
                  (self.estimate - self.create_date) / \

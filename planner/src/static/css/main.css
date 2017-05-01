@@ -1,0 +1,30 @@
+html {
+  position: relative;
+  min-height: 100%;
+}
+body {
+  /* Margin bottom by footer height */
+  padding-top: 80px;
+  margin-bottom: 60px;
+}
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  /* Set the fixed height of the footer here */
+  height: 60px;
+  background-color: #f5f5f5;
+}
+.text-muted {
+  margin: 20px 0;
+  padding-left: 30px;
+}
+.task {
+  padding-left: 15px;
+}
+.rmp {
+  padding-left: 0px;
+}
+.navbar-header {
+  padding-left: 30px;
+}

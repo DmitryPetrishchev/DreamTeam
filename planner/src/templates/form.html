@@ -17,14 +17,22 @@
         {% if not field.is_hidden %}
           {{ field.label_tag }}
         {% endif %}
-          {{ field }}
-        <p class="help-block">{{ field.errors }}</p>
-        </div>
+
+        {{ field }}
+
+        {% if field.errors %}
+          <p class="help-block">{{ field.errors }}</p>
+        {% endif %}
+
+          </div>
       {% endfor %}
     </form>
-      <button class="btn btn-success" form="form" type="submit">Сохранить</button>
+      <button class="btn btn-success" form="form" type="submit">
+        <i class="fa fa-check-square"></i> Сохранить</button>
       {% if return_path %}
-      <a class="btn btn-danger" href="{{ return_path }}">Отменить</a>
+        <a class="btn btn-danger" href="{{ return_path }}">
+          <i class="fa fa-window-close"></i> Отменить
+        </a>
       {% endif %}
   </div>
 {% endblock %}

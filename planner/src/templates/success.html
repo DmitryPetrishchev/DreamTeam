@@ -4,39 +4,44 @@
 
 {% block body %}
   <div class="container">
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover">
-        <caption class="text-center">{{ text_head }}</caption>
-        <thead>
-          <tr class="active">
-            {% for field in form %}
-              <th>{{ field.label_tag }}</th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% if form.is_failed %}
-            <tr class="danger">
-          {% else %}
-            {% if form.is_critical %}
-              <tr class="warning">
+    <div class="row">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <caption class="text-center">{{ text_head }}</caption>
+          <thead>
+            <tr class="active">
+              {% for field in form %}
+                <th>{{ field.label_tag }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% if form.is_failed %}
+              <tr class="danger">
             {% else %}
-              {% if form.state.value == 'ready' %}
-                <tr class="success">
+              {% if form.is_critical %}
+                <tr class="warning">
               {% else %}
-                <tr>
+                {% if form.state.value == 'ready' %}
+                  <tr class="success">
+                {% else %}
+                  <tr>
+                {% endif %}
               {% endif %}
             {% endif %}
-          {% endif %}
-          {% for field in form %}
-            <td>{{ field.data }}</td>
-          {% endfor %}
-          </tr>
-        </tbody>
-      </table>
+
+            {% for field in form %}
+              <td>{{ field.data }}</td>
+            {% endfor %}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row">
       {% url 'src:task_list' as tasks_url %}
-      {% url 'src:roadmap_list' as roadmaps_url %}
-      <a class="btn btn-primary" href="{{ roadmaps_url }}">Списки</a>
+      {% url 'src:roadmap_list' as rmp_url %}
+      <a class="btn btn-primary" href="{{ rmp_url }}">Списки</a>
       <a class="btn btn-primary" href="{{ tasks_url }}">Задачи</a>
     </div>
   </div>
