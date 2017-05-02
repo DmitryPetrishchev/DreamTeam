@@ -21,37 +21,49 @@
                 </tr>
               </thead>
               <tbody>
-                {% for task in tasks %}
-                  {% if task.is_failed %}
-                    <tr class="danger">
-                  {% else %}
-                    {% if task.is_critical %}
-                      <tr class="warning">
+                {% if not tasks %}
+                  <tr>
+                    <td class="info text-center" colspan="4">Еще не создано ни одной задачи</td>
+                  </tr>
+                {% else %}
+                  {% for task in tasks %}
+                    {% if task.is_failed %}
+                      <tr class="danger">
                     {% else %}
-                      {% if task.state == "ready" %}
-                        <tr class="success">
+                      {% if task.is_critical %}
+                        <tr class="warning">
                       {% else %}
-                        <tr>
+                        {% if task.state == "ready" %}
+                          <tr class="success">
+                        {% else %}
+                          <tr>
+                        {% endif %}
                       {% endif %}
                     {% endif %}
-                  {% endif %}
-                  <td style="word-break: break-all">{{ task.title }}</td>
-                  <td style="word-break: break-all">{{ task.get_state_display }}</td>
-                  <td style="word-break: break-all">{{ task.estimate }}</td>
-                  <td>
-                    {% url 'src:task_delete' task.id as delete_url %}
-                    {% url 'src:task_edit' task.id as edit_url %}
-                    <div class="btn-toolbar task" role="toolbar">
-                      <a class="btn btn-primary btn-xs" href="{{ edit_url }}" title="Редактировать" data-toggle="tooltip" data-placement="left" aria-label="Edit">
-                        <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-                      </a>
-                      <a class="btn btn-danger btn-xs" href="{{ delete_url }}" title="Удалить" data-toggle="tooltip" data-placement="right" aria-label="Delete">
-                        <i class="fa fa-trash-o" aria-hidden="true"></i>
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
+                    <td style="word-break: break-all">{{ task.title }}</td>
+                    <td style="word-break: break-all">{{ task.get_state_display }}</td>
+                    <td style="word-break: break-all">{{ task.estimate }}</td>
+                    <td>
+                      {% url 'src:task_edit' task.id as edit_url %}
+                      <div class="btn-toolbar task" role="toolbar">
+                        <form action="{{ edit_url }}" method="get">
+                          <button type="submit" class="btn btn-primary btn-xs" title="Редактировать" data-toggle="tooltip" data-placement="left">
+                            <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                          </button>
+                        </form>
+                        {% url 'src:task_delete' as delete_url %}
+                        <form action="{{ delete_url }}" method="post">
+                          {% csrf_token %}
+                          <input type="hidden" name="id" value="{{ task.id }}" />
+                          <button type="submit" class="btn btn-danger btn-xs" title="Удалить" data-toggle="tooltip" data-placement="right">
+                            <i class="fa fa-trash-o" aria-hidden="true"></i>
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% endif %}
               </tbody>
             </table>
           </div>

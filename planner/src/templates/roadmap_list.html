@@ -22,28 +22,42 @@
                 </tr>
               </thead>
               <tbody>
-                {% for roadmap in roadmaps %}
+                {% if not roadmaps %}
                   <tr>
-                    <td style="word-break: break-all">{{ roadmap.title }}</td>
-                    <td style="word-break: break-all">{{ roadmap.tasks.count }}</td>
-                    <td>
-                      {% url 'src:roadmap_statistics' roadmap.id as stat_url %}
-                      {% url 'src:roadmap_tasks' roadmap.id as tasks_url %}
-                      {% url 'src:roadmap_delete' roadmap.id as delete_url %}
-                      <div class="btn-toolbar rmp" role="toolbar">
-                        <a class="btn btn-primary btn-xs" href="{{ stat_url }}" title="Статистика" data-toggle="tooltip" data-placement="left">
-                          <i class="fa fa-pie-chart"></i>
-                        </a>
-                        <a class="btn btn-primary btn-xs" href="{{ tasks_url }}" title="Задачи" data-toggle="tooltip" data-placement="bottom">
-                          <i class="fa fa-list"></i>
-                        </a>
-                        <a class="btn btn-danger btn-xs" href="{{ delete_url }}" title="Удалить" data-toggle="tooltip" data-placement="right">
-                          <i class="fa fa-trash-o"></i>
-                        </a>
-                      </div>
-                    </td>
+                    <td colspan="3" class="info text-center">Еще не создано ни одного списка</td>
                   </tr>
-                {% endfor %}
+                {% else %}
+                  {% for roadmap in roadmaps %}
+                    <tr>
+                      <td style="word-break: break-all">{{ roadmap.title }}</td>
+                      <td style="word-break: break-all">{{ roadmap.tasks.count }}</td>
+                      <td>
+                        {% url 'src:roadmap_statistics' roadmap.id as stat_url %}
+                        <div class="btn-toolbar rmp" role="toolbar">
+                          <form action="{{ stat_url }}" method="get">
+                            <button class="btn btn-primary btn-xs" title="Статистика" data-toggle="tooltip" data-placement="left">
+                              <i class="fa fa-pie-chart"></i>
+                            </button>
+                          </form>
+                          {% url 'src:roadmap_tasks' roadmap.id as tasks_url %}
+                          <form action="{{ tasks_url }}" method="get">
+                            <button class="btn btn-primary btn-xs" title="Задачи" data-toggle="tooltip" data-placement="bottom">
+                              <i class="fa fa-list"></i>
+                            </button>
+                          </form>
+                          {% url 'src:roadmap_delete' as delete_url %}
+                          <form action="{{ delete_url }}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="id" value="{{ roadmap.id }}" />
+                            <button class="btn btn-danger btn-xs" title="Удалить" data-toggle="tooltip" data-placement="right">
+                              <i class="fa fa-trash-o"></i>
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% endif %}
               </tbody>
             </table>
           </div>

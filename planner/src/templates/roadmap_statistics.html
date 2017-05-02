@@ -25,19 +25,25 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for year, weeks in data|sort %}
+                  {% if not data %}
                     <tr>
-                      <td colspan="4" class="text-center info">{{ year }}</td>
+                      <td colspan="4" class="text-center info">Еще не создано ни одной задачи</td>
                     </tr>
-                    {% for week, data in weeks|sort %}
+                  {% else %}
+                    {% for year, weeks in data|sort %}
                       <tr>
-                        <td>{{ week }}</td>
-                        <td>{{ data.dates }}</td>
-                        <td>{{ data.created }}</td>
-                        <td>{{ data.solved }}</td>
+                        <td colspan="4" class="text-center info">{{ year }}</td>
                       </tr>
+                      {% for week, data in weeks|sort %}
+                        <tr>
+                          <td>{{ week }}</td>
+                          <td>{{ data.dates }}</td>
+                          <td>{{ data.created }}</td>
+                          <td>{{ data.solved }}</td>
+                        </tr>
+                      {% endfor %}
                     {% endfor %}
-                  {% endfor %}
+                  {% endif %}
                 </tbody>
               </table>
             </div>
@@ -54,22 +60,28 @@
               <table class="table table-bordered table-hover">
                 <thead>
                   <tr class="active">
-                    <td class="col-xs-6 col-sm-6 col-md-6 col-lg-6">Месяц</td>
-                    <td class="col-xs-6 col-sm-6 col-md-6 col-lg-6">Зачислено</td>
+                    <th class="col-xs-6 col-sm-6 col-md-6 col-lg-6">Месяц</td>
+                    <th class="col-xs-6 col-sm-6 col-md-6 col-lg-6">Зачислено</td>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for year, months in points|sort %}
+                  {% if not points %}
                     <tr>
-                      <td colspan="2" class="text-center info">{{ year }}</td>
+                      <td colspan="4" class="text-center info">Еще не создано ни одной задачи</td>
                     </tr>
-                    {% for month in months %}
+                  {% else %}
+                    {% for year, months in points|sort %}
                       <tr>
-                        <td>{{ month.month }}</td>
-                        <td>{{ month.points }}</td>
+                        <td colspan="2" class="text-center info">{{ year }}</td>
                       </tr>
+                      {% for month in months %}
+                        <tr>
+                          <td>{{ month.month }}</td>
+                          <td>{{ month.points }}</td>
+                        </tr>
+                      {% endfor %}
                     {% endfor %}
-                  {% endfor %}
+                  {% endif %}
                 </tbody>
               </table>
             </div>

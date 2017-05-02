@@ -62,7 +62,7 @@ class Task(models.Model):
         )
         max_estimate = tasks.aggregate(
             max_estimate=Max('interval')
-        ).get()
+        ).get('max_estimate')
         points = (date.today() - self.create_date) / \
                  (self.estimate - self.create_date) + \
                  (self.estimate - self.create_date) / \
