@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}">
     <link rel="stylesheet" href="{% static "css/font-awesome.css" %}">
     <link rel="stylesheet" href="{% static "css/main.css" %}">
+    {% block head %}{% endblock %}
   </head>
 <body>
   <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -22,6 +23,7 @@
         <a href="{{ main }}" class="navbar-brand">Planner</a>
       </div>
       <div class="navbar-collapse collapse">
+        {% block menu %}
         <ul class="nav navbar-nav">
           <li><a href="{{ main }}">Главная</a></li>
           {% url 'src:roadmap_create' as rmp_create %}
@@ -33,6 +35,7 @@
           {% url 'src:task_list' as task_list %}
           <li><a href="{{ task_list }}">Задачи</a></li>
         </ul>
+        {% endblock %}
       </div>
     </div>
   </nav>

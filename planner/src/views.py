@@ -1,4 +1,6 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from random import randrange
+from django.contrib.auth import authenticate, login, logout
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import Count, DateField, ExpressionWrapper, F, Sum
@@ -7,8 +9,107 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
 from isoweek import Week
-from src.forms import TaskForm, RoadmapForm
+from src.forms import TaskForm, RoadmapForm, UserForm, ChangePasswordForm, LoginForm
 from src.models import Task, Roadmap, Scores
+
+@require_GET
+@transaction.atomic
+def generate_tasks(request):
+    roadmap = Roadmap(title='Random roadmap')
+    roadmap.save()
+    value = int(request.GET['value'])
+    for i in range(value):
+        title = 'Random task (%s)' % i
+        year = randrange(2007, 2020)
+        month = randrange(1, 13)
+        day = randrange(1, 29)
+        estimate = date(year, month, day)
+        task = Task(title=title, estimate=estimate, roadmap_id=roadmap.id)
+        task.save()
+        task.create_date = estimate - timedelta(days=randrange(500, 1000))
+        task.save()
+        flag = randrange(0, 2)
+        if flag == 1:
+            task.state = 'ready'
+            task.save()
+            score = task.scores
+            score.date = estimate - timedelta(days=randrange(0, 500))
+            score.save()
+    return redirect(reverse('src:main'))
+
+@require_GET
+
+@require_GET
+def get_login(request, *, error=False):
+    form = LoginForm()
+    return render(request, 'login.html', {
+        'form': form,
+        'error': error
+    })
+
+@require_POST
+def post_login(request):
+    form = LoginForm(request.POST)
+    if form.is_valid():
+        email = form.cleaned_data['email']
+        password = form.cleaned_data['password']
+        user = authenticate(username=email, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect(reverse('src:main'))
+        else:
+            return redirect(reverse('src:login', kwargs={'error': True}))
+    else:
+        return redirect(reverse('src:login', kwargs={'error': True}))
+
+@require_GET
+def get_registration(request):
+    form = UserForm()
+    return render(request, 'registration.html', {
+        'form': form,
+    })
+
+@require_POST
+def post_registration(request):
+    if request.POST:
+        form = UserForm(request.POST)
+    else:
+        form = UserForm()
+    if form.is_valid():
+        with transaction.atomic():
+            form.save()
+        return render(request, 'success.html', {
+            'title': 'Пользователь создан',
+            'text_head': 'Пользователь успешно создан',
+            'form': form,
+        })
+    return render(request, 'registration.html', {
+        'form': form,
+    })
+
+@require_GET
+def get_logout(request):
+    logout(request)
+    return redirect(reverse('src:login'))
+
+@require_GET
+def get_change_password(request, *, error=False):
+    form = ChangePasswordForm()
+    return render(request, 'change_password.html', {
+        'form': form,
+        'error': error
+    })
+
+@require_POST
+def post_change_password(request):
+    form = ChangePasswordForm(request.POST)
+    user = request.user
+    if form.is_valid() and user.get_password() == request.POST['old_password']:
+        user.set_password(request.POST['new_password1'])
+        user.save()
+        return redirect(request, 'success_change_password.html')
+    else:
+        return redirect(reverse('change_password', kwargs={'error': True}))
 
 @require_GET
 def main(request):

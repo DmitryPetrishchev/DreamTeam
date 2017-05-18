@@ -1,39 +1,56 @@
 from datetime import date, timedelta
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import ExpressionWrapper, F, Max
 
+class User(AbstractUser):
+    first_name = models.CharField(max_length=32)
+    last_name = models.CharField(max_length=32)
+    email = models.CharField(max_length=32, unique=True)
+    phone = models.CharField(max_length=16)
+    age = models.PositiveSmallIntegerField(blank=True, null=True)
+    region = models.CharField(max_length=32, blank=True)
+    username = models.CharField(max_length=32, default=email, unique=True, editable=False)
+
 class Roadmap(models.Model):
-    title = models.CharField(max_length=64)
+    title = models.CharField(max_length=32)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='roadmaps',
+        related_query_name='roadmap',
+        editable=False
+    )
 
     def __str__(self):
-        return ("Список задач: '%s',\n" +
-                "Всего задач: '%s'") % \
+        return ("Список задач: %s,\n" +
+                "Задач в списке: %s") % \
                 (self.title, self.tasks.count())
 
 class Task(models.Model):
-    title = models.CharField(max_length=64)
+    title = models.CharField(max_length=32)
     estimate = models.DateField()
     available_states = (
         ('in_progress', 'Выполняется'),
         ('ready', 'Выполнена')
     )
     state = models.CharField(
-        max_length=11,
+        max_length=16,
         default='in_progress',
         choices=available_states
     )
     create_date = models.DateField(auto_now_add=True, editable=False)
     roadmap = models.ForeignKey(
         Roadmap,
-        models.CASCADE,
+        on_delete=models.CASCADE,
         related_name='tasks',
         related_query_name='task'
     )
 
     def __str__(self):
-        return ("Задача: '%s',\n" +
-                "Статус: '%s',\n" +
-                "Выполнить до: '%s'\n") % \
+        return ("Задача: %s,\n" +
+                "Статус: %s,\n" +
+                "Выполнить до: %s\n") % \
                 (self.title, self.state, self.estimate)
 
     def save(self, *args, **kwargs):
@@ -72,7 +89,7 @@ class Task(models.Model):
 class Scores(models.Model):
     task = models.OneToOneField(
         Task,
-        models.CASCADE,
+        on_delete=models.CASCADE,
         related_name='scores',
         related_query_name='score'
     )
@@ -83,6 +100,6 @@ class Scores(models.Model):
     )
 
     def __str__(self):
-        return ("Зачислено '%s' очков " +
-                "за задачу '%s'(id=%s)") % \
-                (self.points, self.task.title, self.task.id)
+        return ("Зачислено %s очков " +
+                "за задачу '%s'") % \
+                (self.points, self.task.title)
