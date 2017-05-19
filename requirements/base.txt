@@ -2,3 +2,5 @@ django==1.11
 pylint==1.6.5
 isoweek
 pyyaml
+requests==2.11.1
+pytz==2017.2

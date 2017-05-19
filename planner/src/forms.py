@@ -1,51 +1,65 @@
 from datetime import date, timedelta
 from django import forms
+from django.contrib.auth import forms as auth_forms
 from django.utils.translation import ugettext_lazy as _
 from src.models import Task, Roadmap, User
 
-class UserForm(forms.ModelForm):
+class UserCreationForm(auth_forms.UserCreationForm):
     def __init__(self, *args, **kwargs):
-        super(UserForm, self).__init__(*args, **kwargs)
+        super(UserCreationForm, self).__init__(*args, **kwargs)
         self.fields['email'].widget.attrs.update({
             'class': 'form-control',
             'placeholder': 'Введите ваш e-mail',
             'maxlength': '32'
         })
+        setattr(self.fields['email'], 'error_messages', {
+            'unique': 'Пользователь с таким адресом уже существует.'
+        })
         self.fields['first_name'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'Введите ваше имя',
+            'placeholder': 'Введите имя',
             'maxlength': '32'
         })
         self.fields['last_name'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'Введите вашу фамилию',
+            'placeholder': 'Введите фамилию',
             'maxlength': '32'
         })
         self.fields['phone'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'Введите ваш телефон',
+            'placeholder': 'Введите телефон',
             'maxlength': '16'
         })
         self.fields['age'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'Введите ваш возраст',
+            'placeholder': 'Введите возраст',
             'maxlength': '3'
         })
         self.fields['region'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'Введите ваш регион',
+            'placeholder': 'Введите регион',
             'maxlength': '64'
         })
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Введите пароль',
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Подтвердите пароль',
+        })
 
-    class Meta:
+    class Meta(auth_forms.UserCreationForm.Meta):
         model = User
         fields = [
+            'email',
             'first_name',
             'last_name',
-            'email',
             'phone',
             'age',
-            'region'
+            'region',
+            'password1',
+            'password2',
         ]
         labels = {
             'email': _('E-mail'),
@@ -53,7 +67,9 @@ class UserForm(forms.ModelForm):
             'last_name': _('Фамилия'),
             'phone': _('Телефон'),
             'age': _('Возраст'),
-            'region': _('Регион')
+            'region': _('Регион'),
+            'password1': _('Пароль'),
+            'password2': _('Подтверждение пароля'),
         }
 
 class LoginForm(forms.Form):
@@ -70,12 +86,12 @@ class LoginForm(forms.Form):
             'placeholder': 'Введите пароль',
             'type': 'password',
         })
-    email = forms.CharField(max_length=32, label='E-mail')
-    password = forms.CharField(label='Пароль')
+    email = forms.CharField(max_length=32, label='E-mail', widget=forms.EmailInput)
+    password = forms.CharField(label='Пароль', widget=forms.PasswordInput)
 
-class ChangePasswordForm(forms.Form):
+class PasswordChangeForm(auth_forms.PasswordChangeForm):
     def __init__(self, *args, **kwargs):
-        super(ChangePasswordForm, self).__init__(*args, **kwargs)
+        super(PasswordChangeForm, self).__init__(*args, **kwargs)
         self.fields['old_password'].widget.attrs.update({
             'class': 'form-control',
             'placeholder': 'Введите текущий пароль',
@@ -88,14 +104,13 @@ class ChangePasswordForm(forms.Form):
             'class': 'form-control',
             'placeholder': 'Подтвердите новый пароль',
         })
-    old_password = forms.CharField(label='Текущий пароль')
-    new_password1 = forms.CharField(label='Новый пароль')
-    new_password2 = forms.CharField(label='Подтверждение')
-
-    def clean_new_password1(self):
-        if self.cleaned_data['new_password1'] != self.cleaned_data['new_password2']:
-            raise forms.ValidationError('Новый пароль не подтвержден')
-        return self.cleaned_data['new_password1']
+    class Meta:
+        fields = ['__all__']
+        labels = {
+            'old_password': _('Текущий пароль'),
+            'new_password1': _('Новый пароль'),
+            'new_password2': _('Подтверждение'),
+        }
 
 class TaskForm(forms.ModelForm):
     def __init__(self, *args, hidden=False, **kwargs):

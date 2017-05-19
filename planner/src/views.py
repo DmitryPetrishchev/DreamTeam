@@ -1,15 +1,17 @@
 from datetime import date, datetime, timedelta
 from random import randrange
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import Count, DateField, ExpressionWrapper, F, Sum
 from django.db.models.functions import ExtractYear, ExtractMonth, ExtractWeek
+from django.views import View
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
 from isoweek import Week
-from src.forms import TaskForm, RoadmapForm, UserForm, ChangePasswordForm, LoginForm
+from src.forms import TaskForm, RoadmapForm, UserCreationForm, PasswordChangeForm, LoginForm
 from src.models import Task, Roadmap, Scores
 
 @require_GET
@@ -37,81 +39,77 @@ def generate_tasks(request):
             score.save()
     return redirect(reverse('src:main'))
 
-@require_GET
 
-@require_GET
-def get_login(request, *, error=False):
-    form = LoginForm()
-    return render(request, 'login.html', {
-        'form': form,
-        'error': error
-    })
+class Login(View):
+    http_method_names = ['get', 'post']
 
-@require_POST
-def post_login(request):
-    form = LoginForm(request.POST)
-    if form.is_valid():
-        email = form.cleaned_data['email']
-        password = form.cleaned_data['password']
+    def get(self, request, *args, error=False, **kwargs):
+        form = LoginForm()
+        return render(request, 'login.html', {
+            'form': form,
+            'error': error,
+        })
+
+    def post(self, request, *args, **kwargs):
+        email = request.POST['email']
+        password = request.POST['password']
         user = authenticate(username=email, password=password)
         if user is not None:
             login(request, user)
             return redirect(reverse('src:main'))
         else:
-            return redirect(reverse('src:login', kwargs={'error': True}))
-    else:
-        return redirect(reverse('src:login', kwargs={'error': True}))
+            return self.get(request, error=True)
+
 
 @require_GET
-def get_registration(request):
-    form = UserForm()
-    return render(request, 'registration.html', {
-        'form': form,
-    })
-
-@require_POST
-def post_registration(request):
-    if request.POST:
-        form = UserForm(request.POST)
-    else:
-        form = UserForm()
-    if form.is_valid():
-        with transaction.atomic():
-            form.save()
-        return render(request, 'success.html', {
-            'title': 'Пользователь создан',
-            'text_head': 'Пользователь успешно создан',
-            'form': form,
-        })
-    return render(request, 'registration.html', {
-        'form': form,
-    })
-
-@require_GET
-def get_logout(request):
+def Logout(request):
     logout(request)
     return redirect(reverse('src:login'))
 
-@require_GET
-def get_change_password(request, *, error=False):
-    form = ChangePasswordForm()
-    return render(request, 'change_password.html', {
-        'form': form,
-        'error': error
-    })
+class Registration(View):
+    http_method_names = ['get', 'post']
 
-@require_POST
-def post_change_password(request):
-    form = ChangePasswordForm(request.POST)
-    user = request.user
-    if form.is_valid() and user.get_password() == request.POST['old_password']:
-        user.set_password(request.POST['new_password1'])
-        user.save()
-        return redirect(request, 'success_change_password.html')
-    else:
-        return redirect(reverse('change_password', kwargs={'error': True}))
+    def get(self, request, *args, **kwargs):
+        form = UserCreationForm()
+        return render(request, 'registration.html', {
+            'form': form,
+        })
+
+    def post(self, request, *args, **kwargs):
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                form.save()
+            return redirect(reverse('src:login'))
+        return render(request, 'registration.html', {
+            'form': form,
+        })
+
+class PasswordChange(View):
+    http_method_names = ['get', 'post']
+
+    def get(self, request, *args, **kwargs):
+        request.session['return_path'] = request.META.get('HTTP_REFERER', '/')
+        form = PasswordChangeForm(user=request.user)
+        return render(request, 'password_change.html', {
+            'form': form,
+            'return_path': request.session['return_path'],
+        })
+
+    def post(self, request, *args, **kwargs):
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            update_session_auth_hash(request, form.user)
+            return redirect(request.session['return_path'])
+        else:
+            return render(request, 'password_change.html', {
+                'form': form,
+                'return_path': request.session['return_path'],
+            })
 
 @require_GET
+@login_required
 def main(request):
     return render(request, 'main.html')
 

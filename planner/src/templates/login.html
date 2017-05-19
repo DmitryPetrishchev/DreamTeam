@@ -21,21 +21,42 @@
 {% block body %}
   <div class="container">
     <form class="form-signin" method="post">
+      {% csrf_token %}
+
       <h2 class="form-signin-heading text-center">Вход</h2>
+
       {% for field in form %}
-        {{ field.label_tag }}
-        {{ field }}
+
+        {% if not error %}
+          <div class="form-group">
+        {% else %}
+          <div class="form-group has-error">
+        {% endif %}
+
+          {{ field.label_tag }}
+          {{ field }}
+
+        </div>
+
       {% endfor %}
+
+      {% if error %}
+      <p class="help-block text-center" style="color:red">Неправильные имя/пароль</p>
+      {% endif %}
+
       <div class="checkbox">
         <label>
           <input type="checkbox" value="remember-me" />Запомнить меня
         </label>
       </div>
+
       <button class="btn btn-lg btn-primary btn-block" type="submit">Войти</button>
+
       <div class="text-center">
         <br />
         <a href="{{ registration }}" class="text-center">Регистрация</a>
       </div>
+
     </form>
   </div>
 {% endblock %}

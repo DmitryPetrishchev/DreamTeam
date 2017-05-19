@@ -4,17 +4,13 @@ import src.views as views
 app_name = 'src'
 urlpatterns = [
 
-    url(r'^login/$', views.selector, {
-        'GET': views.get_login,
-        'POST': views.post_login
-    }, name='login'),
+    url(r'^login/$', views.Login.as_view(), name='login'),
 
-    url(r'^logout/$', views.get_logout, name='logout'),
+    url(r'^logout/$', views.Logout, name='logout'),
 
-    url(r'^registration/$', views.selector, {
-        'GET': views.get_registration,
-        'POST': views.post_registration
-    }, name='registration'),
+    url(r'^registration/$', views.Registration.as_view(), name='registration'),
+
+    url(r'^user/change_password/$', views.PasswordChange.as_view(), name='password_change'),
 
     url(r'^tasks/create/$', views.selector, {
         'GET': views.get_task_create,

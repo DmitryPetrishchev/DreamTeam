@@ -34,6 +34,10 @@
           <li><a href="{{ rmp_list }}">Списки</a></li>
           {% url 'src:task_list' as task_list %}
           <li><a href="{{ task_list }}">Задачи</a></li>
+          {% url 'src:logout' as logout %}
+          <li><a href="{{ logout }}">Выход</a></li>
+          {% url 'src:password_change' as psw_change %}
+          <li><a href="{{ psw_change }}">Сменить пароль</a></li>
         </ul>
         {% endblock %}
       </div>
