@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 from random import randrange
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import Count, DateField, ExpressionWrapper, F, Sum
@@ -11,7 +12,8 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
 from isoweek import Week
-from src.forms import TaskForm, RoadmapForm, UserCreationForm, PasswordChangeForm, LoginForm
+from src.forms import TaskCreationForm, TaskChangeForm, RoadmapCreationForm, \
+                      UserCreationForm, UserChangeForm, PasswordChangeForm, LoginForm
 from src.models import Task, Roadmap, Scores
 
 @require_GET
@@ -51,8 +53,8 @@ class Login(View):
         })
 
     def post(self, request, *args, **kwargs):
-        email = request.POST['email']
-        password = request.POST['password']
+        email = request.POST.get('email')
+        password = request.POST.get('password')
         user = authenticate(username=email, password=password)
         if user is not None:
             login(request, user)
@@ -81,11 +83,37 @@ class Registration(View):
             with transaction.atomic():
                 form.save()
             return redirect(reverse('src:login'))
-        return render(request, 'registration.html', {
+        else:
+            return render(request, 'registration.html', {
+                'form': form,
+            })
+
+
+class UserChange(LoginRequiredMixin, View):
+    http_method_names = ['get', 'post']
+
+    def get(self, request, *args, **kwargs):
+        request.session['return_path'] = request.META.get('HTTP_REFERER', '/')
+        form = UserChangeForm(instance=request.user)
+        return render(request, 'user_change.html', {
             'form': form,
+            'return_path': request.session['return_path'],
         })
 
-class PasswordChange(View):
+    def post(self, request, *args, **kwargs):
+        form = UserChangeForm(request.POST, instance=request.user)
+        if form.is_valid():
+            with transaction.atomic():
+                form.save()
+            return redirect(request.session['return_path'])
+        else:
+            return render(request, 'user_change.html', {
+                'form': form,
+                'return_path': request.session['return_path'],
+            })
+
+
+class PasswordChange(LoginRequiredMixin, View):
     http_method_names = ['get', 'post']
 
     def get(self, request, *args, **kwargs):
@@ -99,8 +127,9 @@ class PasswordChange(View):
     def post(self, request, *args, **kwargs):
         form = PasswordChangeForm(user=request.user, data=request.POST)
         if form.is_valid():
-            form.save()
-            update_session_auth_hash(request, form.user)
+            with transaction.atomic():
+                form.save()
+                update_session_auth_hash(request, form.user)
             return redirect(request.session['return_path'])
         else:
             return render(request, 'password_change.html', {
@@ -108,77 +137,71 @@ class PasswordChange(View):
                 'return_path': request.session['return_path'],
             })
 
+
 @require_GET
 @login_required
 def main(request):
     return render(request, 'main.html')
 
-@require_http_methods(['GET', 'POST'])
-def selector(request, *args, **kwargs):
-    get_view = kwargs.pop('GET', None)
-    post_view = kwargs.pop('POST', None)
-    if request.method == 'GET' and get_view is not None:
-        return get_view(request, *args, **kwargs)
-    elif request.method == 'POST' and post_view is not None:
-        return post_view(request, *args, **kwargs)
-    raise Http404('Не найдена функция представления.')
 
-@require_GET
-def get_task_create(request):
-    form = TaskForm(hidden=True)
-    return render(request, 'form.html', {
-        'form': form,
-        'title': 'Создание задачи'
-    })
+class TaskCreate(LoginRequiredMixin, View):
+    http_method_names = ['get', 'post']
 
-@require_POST
-def post_task_create(request):
-    if request.POST:
-        form = TaskForm(request.POST, hidden=True)
-    else:
-        form = TaskForm(hidden=True)
-    if form.is_valid():
-        with transaction.atomic():
-            form.save()
-        return render(request, 'success.html', {
-            'title': 'Задача создана',
-            'text_head': 'Задача успешно создана',
+    def get(self, request, *args, **kwargs):
+        form = TaskCreationForm(user=request.user)
+        return render(request, 'form.html', {
             'form': form,
+            'title': 'Создание задачи',
         })
-    return render(request, 'form.html', {
-        'form': form,
-        'title': 'Создание задачи'
-    })
+
+    def post(self, request, *args, **kwargs):
+        form = TaskCreationForm(request.POST, user=request.user)
+        if form.is_valid():
+            with transaction.atomic():
+                form.save()
+            return render(request, 'success.html', {
+                'title': 'Задача создана',
+                'title_body': 'Задача успешно создана',
+                'form': form,
+            })
+        else:
+            return render(request, 'form.html', {
+                'form': form,
+                'title': 'Создание задачи',
+            })
 
 
-@require_GET
-def get_roadmap_create(request):
-    form = RoadmapForm()
-    return render(request, 'form.html', {
-        'form': form,
-        'title': 'Создание списка задач'
-    })
+class RoadmapCreate(LoginRequiredMixin, View):
+    http_method_names = ['get', 'post']
+
+    def get(self, request, *args, **kwargs):
+        form = RoadmapCreationForm()
+        return render(request, 'form.html', {
+            'form': form,
+            'title': 'Создание списка задач'
+        })
+
+    def post(self, request, *args, **kwargs):
+        form = RoadmapCreationForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                roadmap = Roadmap(user=request.user)
+                form = RoadmapCreationForm(request.POST, instance=roadmap)
+                form.save()
+            return render(request, 'success.html', {
+                'title': 'Список создан',
+                'title_body': 'Список задач успешно создан',
+                'form': form,
+            })
+        else:
+            return render(request, 'form.html', {
+                'form': form,
+                'title': 'Создание списка задач',
+            })
+
 
 @require_POST
-def post_roadmap_create(request):
-    if request.POST:
-        form = RoadmapForm(request.POST)
-    else:
-        form = RoadmapForm()
-    if form.is_valid():
-        with transaction.atomic():
-            form.save()
-        return render(request, 'success.html', {
-            'title': 'Список создан',
-            'text_head': 'Список задач успешно создан',
-            'form': form
-        })
-    return render(request, 'form.html', {
-        'form': form,
-        'title': 'Создание списка задач'
-    })
-
-@require_POST
+@login_required
 @transaction.atomic
 def task_delete(request):
     return_path = request.META.get('HTTP_REFERER', '/')
@@ -189,12 +212,17 @@ def task_delete(request):
     else:
         if value > 0:
             task = get_object_or_404(Task, id=value)
-            task.delete()
+            if task.roadmap.user == request.user:
+                task.delete()
+            else:
+                Http404('У Вас недостаточно прав на удаление данной задачи.')
         else:
             raise Http404('Запрос не содержит параметра "id".')
     return redirect(return_path)
 
+
 @require_POST
+@login_required
 @transaction.atomic
 def roadmap_delete(request):
     return_path = request.META.get('HTTP_REFERER', '/')
@@ -205,27 +233,38 @@ def roadmap_delete(request):
     else:
         if value > 0:
             roadmap = get_object_or_404(Roadmap, id=value)
-            roadmap.delete()
+            if roadmap.user == request.user:
+                roadmap.delete()
+            else:
+                Http404('У Вас недостаточно прав на удаление данного списка задач.')
         else:
             raise Http404('Запрос не содержит параметра "id".')
     return redirect(return_path)
 
+
 @require_GET
+@login_required
 @transaction.atomic
 def task_list(request):
-    tasks = Task.objects.order_by('state', 'estimate')
+    tasks = Task.objects.filter(roadmap__user=request.user).order_by('state', 'estimate')
     return render(request, 'task_list.html', {'tasks': tasks})
 
-@require_GET
-@transaction.atomic
-def roadmap_list(request):
-    roadmaps = Roadmap.objects.order_by('title')
-    return render(request, 'roadmap_list.html', {'roadmaps': roadmaps})
 
 @require_GET
+@login_required
+@transaction.atomic
+def roadmap_list(request):
+    roadmaps = Roadmap.objects.filter(user=request.user).order_by('title')
+    return render(request, 'roadmap_list.html', {'roadmaps': roadmaps})
+
+
+@require_GET
+@login_required
 @transaction.atomic
 def roadmap_tasks(request, *, value=-1):
     roadmap = get_object_or_404(Roadmap, id=value)
+    if roadmap.user != request.user:
+        raise Http404('У Вас недостаточно прав для просмотра данного списка задач.')
     if hasattr(roadmap, 'tasks'):
         tasks = roadmap.tasks.order_by('state', 'estimate')
     else:
@@ -235,37 +274,47 @@ def roadmap_tasks(request, *, value=-1):
         'return_path': reverse('src:roadmap_list')
     })
 
-@require_GET
-@transaction.atomic
-def get_task_edit(request, *, value=-1):
-    task = get_object_or_404(Task, id=value)
-    form = TaskForm(instance=task)
-    request.session['return_path'] = request.META.get('HTTP_REFERER', '/')
-    return render(request, 'form.html', {
-        'title': 'Редактирование задачи',
-        'form': form,
-        'return_path': request.session['return_path']
-    })
 
-@require_POST
-@transaction.atomic
-def post_task_edit(request, *, value=-1):
-    form = TaskForm(request.POST)
-    if form.is_valid():
+class TaskChange(LoginRequiredMixin, View):
+    http_method_names = ['get', 'post']
+
+    def get(self, request, *args, value=-1, **kwargs):
         task = get_object_or_404(Task, id=value)
-        form = TaskForm(request.POST, instance=task)
-        form.save()
-        return redirect(request.session['return_path'])
-    return render(request, 'form.html', {
-        'title': 'Редактирование задачи',
-        'form': form,
-        'return_path': request.session['return_path']
-    })
+        if task.roadmap.user != request.user:
+            raise Http404('У Вас недостаточно прав для редактирования данной задачи.')
+        form = TaskChangeForm(user=request.user, instance=task)
+        request.session['return_path'] = request.META.get('HTTP_REFERER', '/')
+        return render(request, 'form.html', {
+            'title': 'Редактирование задачи',
+            'form': form,
+            'return_path': request.session['return_path'],
+        })
+
+    def post(self, request, *args, value=-1, **kwargs):
+        form = TaskChangeForm(request.POST, user=request.user)
+        if form.is_valid():
+            task = get_object_or_404(Task, id=value)
+            if task.roadmap.user != request.user:
+                raise Http404('У Вас недостаточно прав для редактирования данной задачи.')
+            form = TaskChangeForm(request.POST, user=request.user, instance=task)
+            with transaction.atomic():
+                form.save()
+            return redirect(request.session['return_path'])
+        else:
+            return render(request, 'form.html', {
+                'title': 'Редактирование задачи',
+                'form': form,
+                'return_path': request.session['return_path']
+            })
+
 
 @require_GET
+@login_required
 @transaction.atomic
 def roadmap_statistics(request, *, value=-1):
     roadmap = get_object_or_404(Roadmap, id=value)
+    if roadmap.user != request.user:
+        raise Http404('У Вас недостаточно прав на просмотр статистики по данному списку задач.')
     if hasattr(roadmap, 'tasks'):
         tasks = roadmap.tasks.only('create_date').annotate(
             year=ExtractYear('create_date'),

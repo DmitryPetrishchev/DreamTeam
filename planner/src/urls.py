@@ -12,24 +12,17 @@ urlpatterns = [
 
     url(r'^user/change_password/$', views.PasswordChange.as_view(), name='password_change'),
 
-    url(r'^tasks/create/$', views.selector, {
-        'GET': views.get_task_create,
-        'POST': views.post_task_create
-    }, name='task_create'),
+    url(r'^user/change_profile/$', views.UserChange.as_view(), name='user_change'),
+
+    url(r'^tasks/create/$', views.TaskCreate.as_view(), name='task_create'),
 
     url(r'^tasks/delete/$', views.task_delete, name='task_delete'),
 
     url(r'^tasks/all/$', views.task_list, name='task_list'),
 
-    url(r'^tasks/(?P<value>[0-9]+)/edit/$', views.selector, {
-        'GET': views.get_task_edit,
-        'POST': views.post_task_edit
-    }, name='task_edit'),
+    url(r'^tasks/(?P<value>[0-9]+)/edit/$', views.TaskChange.as_view(), name='task_edit'),
 
-    url(r'^roadmaps/create/$', views.selector, {
-        'GET': views.get_roadmap_create,
-        'POST': views.post_roadmap_create
-    }, name='roadmap_create'),
+    url(r'^roadmaps/create/$', views.RoadmapCreate.as_view(), name='roadmap_create'),
 
     url(r'^roadmaps/delete/$', views.roadmap_delete, name='roadmap_delete'),
 

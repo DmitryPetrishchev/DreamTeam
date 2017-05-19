@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import ExpressionWrapper, F, Max
@@ -33,7 +34,7 @@ class User(AbstractUser):
 class Roadmap(models.Model):
     title = models.CharField(max_length=32)
     user = models.ForeignKey(
-        to=User,
+        to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='roadmaps',
         related_query_name='roadmap',

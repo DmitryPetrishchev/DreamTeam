@@ -38,6 +38,8 @@
           <li><a href="{{ logout }}">Выход</a></li>
           {% url 'src:password_change' as psw_change %}
           <li><a href="{{ psw_change }}">Сменить пароль</a></li>
+          {% url 'src:user_change' as user_change %}
+          <li><a href="{{ user_change }}">Редактировать профиль</a></li>
         </ul>
         {% endblock %}
       </div>
