@@ -24,7 +24,6 @@
       {% csrf_token %}
 
       <h2 class="form-signin-heading text-center">Вход</h2>
-
       {% for field in form %}
 
         {% if not error %}
@@ -33,26 +32,25 @@
           <div class="form-group has-error">
         {% endif %}
 
-          {{ field.label_tag }}
-          {{ field }}
+        {{ field.label_tag }}
+        {{ field }}
 
         </div>
-
       {% endfor %}
 
       {% if error %}
-      <p class="help-block text-center" style="color:red">Неправильные имя/пароль</p>
+        <p class="text-danger text-center">Неправильная пара имя/пароль</p>
       {% endif %}
 
       <div class="checkbox">
         <label>
-          <input type="checkbox" value="remember-me" />Запомнить меня
+          <input type="checkbox" name="remember" value="true" />Запомнить меня
         </label>
       </div>
 
       <button class="btn btn-lg btn-primary btn-block" type="submit">Войти</button>
 
-      <div class="text-center">
+      <div class="text-primary text-center">
         <br />
         {% url 'src:registration' as registration %}
         <a href="{{ registration }}" class="text-center">Регистрация</a>

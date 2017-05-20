@@ -7,11 +7,12 @@
 {% block body %}
   <div class="container">
     <div class="row">
-      <div class="panel panel-info">
+      <div class="panel panel-default">
         <div class="panel-heading text-center">
           <h4 class="text-center">Списки задач</h4>
         </div>
         <div class="panel-body">
+
           <div class="table-responsive">
             <table class="table table-bordered table-hover">
               <thead>
@@ -24,13 +25,13 @@
               <tbody>
                 {% if not roadmaps %}
                   <tr>
-                    <td colspan="3" class="info text-center">Еще не создано ни одного списка</td>
+                    <td colspan="3" class="info text-center">Еще не создано ни одного списка задач</td>
                   </tr>
                 {% else %}
                   {% for roadmap in roadmaps %}
                     <tr>
-                      <td style="word-break: break-all">{{ roadmap.title }}</td>
-                      <td style="word-break: break-all">{{ roadmap.tasks.count }}</td>
+                      <td>{{ roadmap.title }}</td>
+                      <td>{{ roadmap.tasks.count }}</td>
                       <td>
                         {% url 'src:roadmap_statistics' roadmap.id as stat_url %}
                         <div class="btn-toolbar rmp" role="toolbar">
@@ -61,19 +62,21 @@
               </tbody>
             </table>
           </div>
+
         </div>
         <div class="panel-footer">
           <div class="row">
             <div class="col-md-12">
               {% url 'src:roadmap_create' as create_url %}
               <a class="btn btn-success" href="{{ create_url }}">
-                <i class="fa fa-plus-square"></i> Создать список</a>
+                <i class="fa fa-plus-square"></i> Создать новый список</a>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
   {% block scripts %}
     <script>
       $(document).ready (function (){
@@ -81,4 +84,5 @@
       });
     </script>
   {% endblock %}
+
 {% endblock %}

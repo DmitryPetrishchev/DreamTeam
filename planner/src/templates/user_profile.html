@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Профиль
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div>
+            <div class="well well-sm">
+                <div class="row">
+                    <div class="col-sm-4 col-md-4">
+                        <img src="http://placehold.it/380x500" alt="" class="img-rounded img-responsive" />
+                    </div>
+                    <div class="col-sm-8 col-md-8">
+                          <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+                          <p>
+                            <i class="fa fa-map-marker"></i> Регион: {{ user.region }}
+                            <br  />
+                            <i class="fa fa-birthday-cake"></i> Возраст: {{ user.age }}
+                            <br />
+                            <i class="fa fa-envelope"></i> E-mail: {{ user.email }}
+                            <br />
+                            <i class="fa fa-phone"></i> Телефон: {{ user.age }}
+                          </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

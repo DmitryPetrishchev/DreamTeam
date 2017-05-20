@@ -101,23 +101,19 @@ class PasswordChangeForm(auth_forms.PasswordChangeForm):
             'placeholder': 'Введите текущий пароль',
             'maxlength': '16',
         })
+        self.fields['old_password'].label = 'Текущий пароль'
         self.fields['new_password1'].widget.attrs.update({
             'class': 'form-control',
             'placeholder': 'Введите новый пароль',
             'maxlength': '16',
         })
+        self.fields['new_password1'].label = 'Новый пароль'
         self.fields['new_password2'].widget.attrs.update({
             'class': 'form-control',
             'placeholder': 'Подтвердите новый пароль',
             'maxlength': '16',
         })
-    class Meta:
-        fields = '__all__'
-        labels = {
-            'old_password': _('Текущий пароль'),
-            'new_password1': _('Новый пароль'),
-            'new_password2': _('Подтверждение'),
-        }
+        self.fields['new_password2'].label = 'Подтверждение пароля'
 
 
 class UserChangeForm(forms.ModelForm):

@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Список задач{% endblock %}
+{% block title %}
+  Список задач
+{% endblock %}
 
 {%block body %}
   <div class="container">
     <div class="row">
-      <div class="panel panel-info">
+      <div class="panel panel-default">
         <div class="panel-heading text-center">
           <h4 class="text-center">Список задач</h4>
         </div>
@@ -40,9 +42,9 @@
                         {% endif %}
                       {% endif %}
                     {% endif %}
-                    <td style="word-break: break-all">{{ task.title }}</td>
-                    <td style="word-break: break-all">{{ task.get_state_display }}</td>
-                    <td style="word-break: break-all">{{ task.estimate }}</td>
+                    <td>{{ task.title }}</td>
+                    <td>{{ task.get_state_display }}</td>
+                    <td>{{ task.estimate }}</td>
                     <td>
                       {% url 'src:task_edit' task.id as edit_url %}
                       <div class="btn-toolbar task" role="toolbar">
@@ -72,11 +74,17 @@
           <div class="row">
             <div class="col-xs-7 col-sm-7 col-md-8 col-lg-8">
               {% url 'src:task_create' as create_url %}
-              <a class="btn btn-success" href="{{ create_url }}">
-                <i class="fa fa-plus-square"></i> Создать задачу</a>
+              <form id="create" action="{{ create_url }}" method="get">
+              </form>
+              <form id="back" action="{{ return_path }}" method="get">
+              </form>
+              <button form="create" class="btn btn-success" type="submit">
+                <i class="fa fa-plus-square"></i> Создать новую задачу
+              </button>
               {% if return_path %}
-                <a class="btn btn-primary" href="{{ return_path }}">
-                  <i class="fa fa-history"></i> Назад</a>
+                <button form="back" class="btn btn-primary" type="submit">
+                  <i class="fa fa-history"></i> Назад
+                </button>
               {% endif %}
             </div>
             <div class="col-xs-5 col-sm-5 col-md-4 col-lg-4">

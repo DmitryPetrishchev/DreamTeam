@@ -1,17 +1,20 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %}</title>
+    <link rel="icon" href="{% static "favicon.ico" %}", type="image/x-icon">
+    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
     <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}">
     <link rel="stylesheet" href="{% static "css/font-awesome.css" %}">
     <link rel="stylesheet" href="{% static "css/main.css" %}">
     {% block head %}{% endblock %}
   </head>
 <body>
-  <nav class="navbar navbar-inverse navbar-fixed-top">
+  <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
@@ -22,25 +25,51 @@
         {% url 'src:main' as main %}
         <a href="{{ main }}" class="navbar-brand">Planner</a>
       </div>
-      <div class="navbar-collapse collapse">
+
+      <div class="collapse navbar-collapse">
         {% block menu %}
+
         <ul class="nav navbar-nav">
           <li><a href="{{ main }}">Главная</a></li>
-          {% url 'src:roadmap_create' as rmp_create %}
-          <li><a href="{{ rmp_create }}">Создать список</a></li>
-          {% url 'src:task_create' as task_create %}
-          <li><a href="{{ task_create }}">Создать задачу</a></li>
-          {% url 'src:roadmap_list' as rmp_list %}
-          <li><a href="{{ rmp_list }}">Списки</a></li>
-          {% url 'src:task_list' as task_list %}
-          <li><a href="{{ task_list }}">Задачи</a></li>
-          {% url 'src:logout' as logout %}
-          <li><a href="{{ logout }}">Выход</a></li>
-          {% url 'src:password_change' as psw_change %}
-          <li><a href="{{ psw_change }}">Сменить пароль</a></li>
-          {% url 'src:user_change' as user_change %}
-          <li><a href="{{ user_change }}">Редактировать профиль</a></li>
+          <li class="dropdowrn">
+            <a href="" class="dropdown-toggle" data-toggle="dropdown">Списки <b class="caret"></b></a>
+            <ul class="dropdown-menu">
+              {% url 'src:roadmap_create' as rmp_create %}
+              <li><a href="{{ rmp_create }}">Создать список</a></li>
+              <li class="divider"></li>
+              {% url 'src:roadmap_list' as rmp_list %}
+              <li><a href="{{ rmp_list }}">Просмотреть списки</a></li>
+            </ul>
+          </li>
+          <li class="dropdowrn">
+            <a href="" class="dropdown-toggle" data-toggle="dropdown">Задачи <b class="caret"></b></a>
+            <ul class="dropdown-menu">
+              {% url 'src:task_create' as task_create %}
+              <li><a href="{{ task_create }}">Создать задачу</a></li>
+              <li class="divider"></li>
+              {% url 'src:task_list' as task_list %}
+              <li><a href="{{ task_list }}">Просмотреть задачи</a></li>
+            </ul>
+          </li>
         </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li class="dropdowrn">
+            <a href="" class="dropdown-toggle" data-toggle="dropdown">Профиль <b class="caret"></b></a>
+            <ul class="dropdown-menu">
+              {% url 'src:user_profile' as user_profile %}
+              <li><a href="{{ user_profile }}">Мой профиль</a></li>
+              <li class="divider"></li>
+              {% url 'src:user_change' as user_change %}
+              <li><a href="{{ user_change }}">Редактировать</a></li>
+              {% url 'src:password_change' as psw_change %}
+              <li><a href="{{ psw_change }}">Сменить пароль</a></li>
+              {% url 'src:logout' as logout %}
+              <li class="divider"></li>
+              <li><a href="{{ logout }}">Выйти</a></li>
+            </ul>
+          </li>
+        </ul>
+
         {% endblock %}
       </div>
     </div>

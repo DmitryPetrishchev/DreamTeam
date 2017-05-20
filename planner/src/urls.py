@@ -10,9 +10,11 @@ urlpatterns = [
 
     url(r'^registration/$', views.Registration.as_view(), name='registration'),
 
-    url(r'^user/change_password/$', views.PasswordChange.as_view(), name='password_change'),
+    url(r'^user/profile/$', views.user_profile, name='user_profile'),
 
     url(r'^user/change_profile/$', views.UserChange.as_view(), name='user_change'),
+
+    url(r'^user/change_password/$', views.PasswordChange.as_view(), name='password_change'),
 
     url(r'^tasks/create/$', views.TaskCreate.as_view(), name='task_create'),
 
@@ -32,8 +34,8 @@ urlpatterns = [
 
     url(r'^roadmaps/(?P<value>[0-9]+)/statistics/$', views.roadmap_statistics, name='roadmap_statistics'),
 
-    url(r'^$', views.main, name='main'),
+    url(r'^roadmaps/generate/$', views.generate_tasks, name='generate'),
 
-    url(r'^generate/$', views.generate_tasks, name='generate'),
+    url(r'^$', views.main, name='main'),
 
 ]

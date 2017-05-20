@@ -17,10 +17,10 @@ from src.forms import TaskCreationForm, TaskChangeForm, RoadmapCreationForm, \
 from src.models import Task, Roadmap, Scores
 
 @require_GET
+@login_required
 @transaction.atomic
 def generate_tasks(request):
-    roadmap = Roadmap(title='Random roadmap')
-    roadmap.save()
+    roadmap = Roadmap.objects.create(user=request.user, title='Random roadmap')
     value = int(request.GET['value'])
     for i in range(value):
         title = 'Random task (%s)' % i
@@ -28,12 +28,10 @@ def generate_tasks(request):
         month = randrange(1, 13)
         day = randrange(1, 29)
         estimate = date(year, month, day)
-        task = Task(title=title, estimate=estimate, roadmap_id=roadmap.id)
-        task.save()
+        task = Task.objects.create(title=title, estimate=estimate, roadmap_id=roadmap.id)
         task.create_date = estimate - timedelta(days=randrange(500, 1000))
         task.save()
-        flag = randrange(0, 2)
-        if flag == 1:
+        if randrange(0, 2):
             task.state = 'ready'
             task.save()
             score = task.scores
@@ -57,6 +55,10 @@ class Login(View):
         password = request.POST.get('password')
         user = authenticate(username=email, password=password)
         if user is not None:
+            if not request.POST.get('remember'):
+                request.session.set_expiry(0)
+            else:
+                pass
             login(request, user)
             return redirect(reverse('src:main'))
         else:
@@ -64,6 +66,7 @@ class Login(View):
 
 
 @require_GET
+@login_required
 def Logout(request):
     logout(request)
     return redirect(reverse('src:login'))
@@ -88,6 +91,13 @@ class Registration(View):
                 'form': form,
             })
 
+
+@require_GET
+@login_required
+def user_profile(request):
+    return render(request, 'user_profile.html', {
+        'user': request.user,
+    })
 
 class UserChange(LoginRequiredMixin, View):
     http_method_names = ['get', 'post']

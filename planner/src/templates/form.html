@@ -1,12 +1,18 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 
+{% block head %}
+  <link rel="stylesheet" href="{% static "css/registration.css" %}">
+{% endblock %}
+
 {% block body %}
   <div class="container">
-    <form id="form" action="" method="post">
-      <h2 class="text-center">{{ title }}:</h2>
+    <form id="post" class="form-signin" method="post">
+      <h2 class="form-signin-heading text-center">{{ title }}:</h2>
       {% csrf_token %}
+
       {% for field in form %}
         {% if form.is_bound and field.errors %}
           <div class="form-group has-error">
@@ -14,25 +20,26 @@
           <div class="form-group">
         {% endif %}
 
-        {% if not field.is_hidden %}
-          {{ field.label_tag }}
-        {% endif %}
-
+        {{ field.label_tag }}
         {{ field }}
 
         {% if field.errors %}
           <p class="help-block">{{ field.errors }}</p>
         {% endif %}
 
-          </div>
+        </div>
       {% endfor %}
+      <br />
+      <div class="btn-toolbar" role="toolbar">
+        <button form="post" class="btn btn-lg btn-success btn-block" form="form" type="submit">
+          <i class="fa fa-check-square"></i> Сохранить</button>
+        {% if return_path %}
+          <button class="btn btn-lg btn-danger btn-block" form="get" type="submit">
+            <i class="fa fa-window-close"></i> Отменить</button>
+          {% endif %}
+      </div>
     </form>
-      <button class="btn btn-success" form="form" type="submit">
-        <i class="fa fa-check-square"></i> Сохранить</button>
-      {% if return_path %}
-        <a class="btn btn-danger" href="{{ return_path }}">
-          <i class="fa fa-window-close"></i> Отменить
-        </a>
-      {% endif %}
+    <form id="get" action="{{ return_path }}" method="get">
+    </form>
   </div>
 {% endblock %}

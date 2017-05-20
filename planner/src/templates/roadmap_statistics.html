@@ -9,7 +9,7 @@
   <div class="container">
     <div class="row">
       <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-        <div class="panel panel-info">
+        <div class="panel panel-default">
           <div class="panel-heading text-center">
             <h4 class="text-center">Созданные/Решенные</h4>
           </div>
@@ -51,7 +51,7 @@
         </div>
       </div>
       <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-        <div class="panel panel-info">
+        <div class="panel panel-default">
           <div class="panel-heading text-center">
             <h4 class="text-center">Очки</h4>
           </div>
@@ -91,10 +91,13 @@
     </div>
     <div class="row">
       <div class="col-md-12">
-        <a class="btn btn-primary" href="{{ return_path }}">
-          <i class="fa fa-history"></i> Назад
-        </a>
+        <form method="get" action="{{ return_path }}">
+          <button class="btn btn-primary" type="submit">
+            <i class="fa fa-history"></i> Назад
+          </button>
+        </form>
       </div>
     </div>
   </div>
+  <br />
 {% endblock %}

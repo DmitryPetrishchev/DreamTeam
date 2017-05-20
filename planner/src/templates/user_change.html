@@ -11,7 +11,7 @@
 
 {% block body %}
   <div class="container">
-    <form class="form-signin" action="" method="post">
+    <form id="post" class="form-signin" action="" method="post">
       {% csrf_token %}
 
       <h2 class="form-signin-heading text-center">Редактирование профиля</h2>
@@ -28,7 +28,9 @@
         {{ field }}
 
         {% if field.errors %}
-          <p class="help-block">{{ field.errors }}</p>
+          <div class="help-block">
+            <p class="text-danger">{{ field.errors }}</p>
+          </div>
         {% endif %}
 
         </div>
@@ -36,9 +38,9 @@
 
       <br />
       <div class="btn-toolbar center" role="toolbar">
-        <button form="post" class="btn btn-lg btn-success" type="submit">
+        <button form="post" class="btn btn-lg btn-success btn-block" type="submit">
           <i class="fa fa-check-square"></i> Сохранить</button>
-        <button form="get" class="btn btn-lg btn-danger" type="submit">
+        <button form="get" class="btn btn-lg btn-danger btn-block" type="submit">
           <i class="fa fa-window-close"></i> Отменить</button>
       </div>
     </form>
