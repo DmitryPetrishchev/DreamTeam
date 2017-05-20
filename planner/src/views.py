@@ -12,8 +12,10 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
 from isoweek import Week
+import os
 from src.forms import TaskCreationForm, TaskChangeForm, RoadmapCreationForm, \
-                      UserCreationForm, UserChangeForm, PasswordChangeForm, LoginForm
+                      UserCreationForm, UserChangeForm, PasswordChangeForm, \
+                      LoginForm, UploadImageForm
 from src.models import Task, Roadmap, Scores
 
 @require_GET
@@ -95,8 +97,10 @@ class Registration(View):
 @require_GET
 @login_required
 def user_profile(request):
+    form = UploadImageForm()
     return render(request, 'user_profile.html', {
         'user': request.user,
+        'form': form,
     })
 
 class UserChange(LoginRequiredMixin, View):
@@ -121,6 +125,39 @@ class UserChange(LoginRequiredMixin, View):
                 'form': form,
                 'return_path': request.session['return_path'],
             })
+
+@require_POST
+@login_required
+@transaction.atomic
+def upload_image(request):
+    form = UploadImageForm(request.POST, request.FILES)
+    if form.is_valid():
+        user = request.user
+        user.image = form.cleaned_data['image']
+        user.save()
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+    else:
+        raise Http404('Что-то пошло не так.')
+
+@require_POST
+@login_required
+@transaction.atomic
+def delete_image(request):
+    return_path = request.META.get('HTTP_REFERER', '/')
+    try:
+        value = int(request.POST.get('id', -1))
+    except ValueError:
+        raise Http404('Ах-хах, хакер, что ты делаешь, прекрати!')
+    else:
+        if value > 0:
+            if value == request.user.id:
+                request.user.image.delete()
+                request.user.save()
+            else:
+                Http404('У Вас недостаточно прав на удаление данного изображения.')
+        else:
+            raise Http404('Запрос не содержит параметра "id".')
+    return redirect(return_path)
 
 
 class PasswordChange(LoginRequiredMixin, View):

@@ -233,3 +233,12 @@ class RoadmapCreationForm(forms.ModelForm):
         labels = {
             'title': _('Название'),
         }
+
+class UploadImageForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(UploadImageForm, self).__init__(*args, **kwargs)
+        self.fields['image'].widget.attrs.update({
+            'class': 'form-control',
+        })
+        self.fields['image'].label = 'Выберите файл'
+    image = forms.ImageField()

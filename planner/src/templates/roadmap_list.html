@@ -68,8 +68,11 @@
           <div class="row">
             <div class="col-md-12">
               {% url 'src:roadmap_create' as create_url %}
-              <a class="btn btn-success" href="{{ create_url }}">
-                <i class="fa fa-plus-square"></i> Создать новый список</a>
+              <form action="{{ create_url }}" method="get">
+                <button class="btn btn-success">
+                  <i class="fa fa-plus-square"></i> Создать новый список
+                </bitton>
+              </form>
             </div>
           </div>
         </div>

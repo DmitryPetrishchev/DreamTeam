@@ -25,7 +25,7 @@ SECRET_KEY = 'qmn$qj2hrfkt&l_d^4oo6!1b8#c8dw(@#&&a4th=@a^qnurfc2'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.0.103']
 
 
 # Application definition
@@ -62,6 +62,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
+                'django.template.context_processors.media',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
@@ -133,5 +134,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
+STATIC_ROOT = BASE_DIR + '/src' + '/static'
 STATIC_URL = '/static/'
+MEDIA_ROOT = BASE_DIR + '/src' + '/media'
+MEDIA_URL = '/media/'
 PROJECT_HOST = 'todo.ru'

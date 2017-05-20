@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.conf.urls import url
+from django.conf.urls.static import static
 import src.views as views
 
 app_name = 'src'
@@ -13,6 +15,10 @@ urlpatterns = [
     url(r'^user/profile/$', views.user_profile, name='user_profile'),
 
     url(r'^user/change_profile/$', views.UserChange.as_view(), name='user_change'),
+
+    url(r'^user/change_profile/upload_image/$', views.upload_image, name='upload_image'),
+
+    url(r'^user/change_profile/delete_image/$', views.delete_image, name='delete_image'),
 
     url(r'^user/change_password/$', views.PasswordChange.as_view(), name='password_change'),
 
@@ -39,3 +45,6 @@ urlpatterns = [
     url(r'^$', views.main, name='main'),
 
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

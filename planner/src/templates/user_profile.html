@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
   Профиль
@@ -11,7 +12,21 @@
             <div class="well well-sm">
                 <div class="row">
                     <div class="col-sm-4 col-md-4">
-                        <img src="http://placehold.it/380x500" alt="" class="img-rounded img-responsive" />
+                        <img src="{{user.image.url}}" alt="" class="img-rounded img-responsive" />
+                        <br />
+                        {% url 'src:upload_image' as upload_image %}
+                        <form action="{{ upload_image }}" method="post" enctype="multipart/form-data">
+                          {% csrf_token %}
+                          {{ form }}
+                          <br />
+                          <button class="btn btn-lg btn-success btn-block" type="submit">Загрузить</button>
+                          <button form="delete" class="btn btn-lg btn-danger btn-block" type="submit">Удалить</button>
+                        </form>
+                        {% url 'src:delete_image' as delete_image %}
+                        <form id="delete" action="{{ delete_image }}" method="post">
+                          {% csrf_token %}
+                          <input type="hidden" name="id" value="{{ user.id }}" />
+                        </form>
                     </div>
                     <div class="col-sm-8 col-md-8">
                           <h4>{{ user.first_name }} {{ user.last_name }}</h4>
@@ -22,7 +37,7 @@
                             <br />
                             <i class="fa fa-envelope"></i> E-mail: {{ user.email }}
                             <br />
-                            <i class="fa fa-phone"></i> Телефон: {{ user.age }}
+                            <i class="fa fa-phone"></i> Телефон: {{ user.phone }}
                           </p>
                     </div>
                 </div>
