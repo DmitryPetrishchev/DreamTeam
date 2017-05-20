@@ -137,7 +137,7 @@ def upload_image(request):
         user.save()
         return redirect(request.META.get('HTTP_REFERER', '/'))
     else:
-        raise Http404('Что-то пошло не так.')
+        raise Http404('Что-то пошло не так при загрузке изображения.')
 
 @require_POST
 @login_required
@@ -154,7 +154,7 @@ def delete_image(request):
                 request.user.image.delete()
                 request.user.save()
             else:
-                Http404('У Вас недостаточно прав на удаление данного изображения.')
+                raise Http404('У Вас недостаточно прав на удаление данного изображения.')
         else:
             raise Http404('Запрос не содержит параметра "id".')
     return redirect(return_path)
@@ -262,7 +262,7 @@ def task_delete(request):
             if task.roadmap.user == request.user:
                 task.delete()
             else:
-                Http404('У Вас недостаточно прав на удаление данной задачи.')
+                raise Http404('У Вас недостаточно прав на удаление данной задачи.')
         else:
             raise Http404('Запрос не содержит параметра "id".')
     return redirect(return_path)
@@ -283,7 +283,7 @@ def roadmap_delete(request):
             if roadmap.user == request.user:
                 roadmap.delete()
             else:
-                Http404('У Вас недостаточно прав на удаление данного списка задач.')
+                raise Http404('У Вас недостаточно прав на удаление данного списка задач.')
         else:
             raise Http404('Запрос не содержит параметра "id".')
     return redirect(return_path)
