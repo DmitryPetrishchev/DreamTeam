@@ -16,9 +16,9 @@ urlpatterns = [
 
     url(r'^user/change_profile/$', views.UserChange.as_view(), name='user_change'),
 
-    url(r'^user/change_profile/upload_image/$', views.upload_image, name='upload_image'),
+    url(r'^user/change_profile/upload_image/$', views.image_upload, name='image_upload'),
 
-    url(r'^user/change_profile/delete_image/$', views.delete_image, name='delete_image'),
+    url(r'^user/change_profile/delete_image/$', views.image_delete, name='image_delete'),
 
     url(r'^user/change_password/$', views.PasswordChange.as_view(), name='password_change'),
 
@@ -38,9 +38,9 @@ urlpatterns = [
 
     url(r'^roadmaps/(?P<value>[0-9]+)/tasks/$', views.roadmap_tasks, name='roadmap_tasks'),
 
-    url(r'^roadmaps/(?P<value>[0-9]+)/statistics/$', views.roadmap_statistics, name='roadmap_statistics'),
+    url(r'^roadmaps/(?P<value>[0-9]+)/statistics/$', views.RoadmapStatistics.as_view(), name='roadmap_statistics'),
 
-    url(r'^roadmaps/generate/$', views.generate_tasks, name='generate'),
+    url(r'^roadmaps/generate/(?P<value>[0-9]{1,4})$', views.generate_tasks, name='generate_tasks'),
 
     url(r'^$', views.main, name='main'),
 

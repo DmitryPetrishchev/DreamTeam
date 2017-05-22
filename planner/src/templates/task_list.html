@@ -48,19 +48,25 @@
                     <td>
                       {% url 'src:task_edit' task.id as edit_url %}
                       <div class="btn-toolbar task" role="toolbar">
-                        <form action="{{ edit_url }}" method="get">
-                          <button type="submit" class="btn btn-primary btn-xs" title="Редактировать" data-toggle="tooltip" data-placement="left">
-                            <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-                          </button>
+                        <form id="edit {{ task.id }}" action="{{ edit_url }}" method="get">
                         </form>
+                        <button form="edit {{ task.id }}" type="submit" class="btn btn-primary btn-xs" title="Редактировать" data-toggle="tooltip" data-placement="left">
+                          <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                        </button>
                         {% url 'src:task_delete' as delete_url %}
-                        <form action="{{ delete_url }}" method="post">
+                        <form id="delete {{ task.id }}" action="{{ delete_url }}" method="post">
                           {% csrf_token %}
                           <input type="hidden" name="id" value="{{ task.id }}" />
-                          <button type="submit" class="btn btn-danger btn-xs" title="Удалить" data-toggle="tooltip" data-placement="right">
-                            <i class="fa fa-trash-o" aria-hidden="true"></i>
-                          </button>
                         </form>
+                        <button form="delete {{ task.id }}" type="submit" class="btn btn-danger btn-xs"
+                         data-toggle="confirmation" data-singleton="true" data-popout="true"
+                         data-placement="top" data-btn-ok-label="Да"
+                         data-btn-ok-icon="glyphicon glyphicon-share-alt" data-btn-ok-class="btn-success btn-sm"
+                         data-btn-cancel-label="Нет" data-btn-cancel-icon="glyphicon glyphicon-ban-circle"
+                         data-btn-cancel-class="btn-danger btn-sm" data-title="Удалить задачу?"
+                         data-content="Подтвердите действие">
+                          <i class="fa fa-trash-o" aria-hidden="true"></i>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -107,8 +113,15 @@
   </div>
   {% block scripts %}
     <script>
-      $(document).ready (function (){
+      $(document).ready(function(){
         $('[data-toggle="tooltip"]').tooltip();
+      });
+    </script>
+    <script>
+      $(document).ready(function(){
+        $('[data-toggle=confirmation]').confirmation({
+          rootSelector: '[data-toggle=confirmation]'
+        });
       });
     </script>
   {% endblock %}

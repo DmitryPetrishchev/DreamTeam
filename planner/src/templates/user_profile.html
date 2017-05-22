@@ -12,18 +12,32 @@
             <div class="well well-sm">
                 <div class="row">
                     <div class="col-sm-4 col-md-4">
-                        <img src="{{user.image.url}}" alt="" class="img-rounded img-responsive" />
+                        {% if user.image %}
+                          <img src="{{user.image.url}}" alt="" class="img-rounded img-responsive" />
+                        {% else %}
+                          <img src="{{ MEDIA_URL }}users/images/no-img.png" alt="" class="img-rounded img-responsive" />
+                        {% endif %}
                         <br />
-                        {% url 'src:upload_image' as upload_image %}
-                        <form action="{{ upload_image }}" method="post" enctype="multipart/form-data">
+                        {% url 'src:image_upload' as image_upload %}
+                        <form action="{{ image_upload }}" method="post" enctype="multipart/form-data">
                           {% csrf_token %}
                           {{ form }}
                           <br />
-                          <button class="btn btn-lg btn-success btn-block" type="submit">Загрузить</button>
-                          <button form="delete" class="btn btn-lg btn-danger btn-block" type="submit">Удалить</button>
+                          <button class="btn btn-lg btn-success btn-block" type="submit">
+                            <i class="fa fa-upload"></i> Загрузить</button>
+                          {% if user.image %}
+                            <button form="delete" type="submit" class="btn btn-danger btn-lg btn-block"
+                             data-toggle="confirmation" data-singleton="true" data-popout="true"
+                             data-placement="top" data-btn-ok-label="Да"
+                             data-btn-ok-icon="glyphicon glyphicon-share-alt" data-btn-ok-class="btn-success btn-sm"
+                             data-btn-cancel-label="Нет" data-btn-cancel-icon="glyphicon glyphicon-ban-circle"
+                             data-btn-cancel-class="btn-danger btn-sm" data-title="Удалить фотографию?"
+                             data-content="Подтвердите действие">
+                             <i class="fa fa-trash"></i> Удалить</button>
+                          {% endif %}
                         </form>
-                        {% url 'src:delete_image' as delete_image %}
-                        <form id="delete" action="{{ delete_image }}" method="post">
+                        {% url 'src:image_delete' as image_delete %}
+                        <form id="delete" action="{{ image_delete }}" method="post">
                           {% csrf_token %}
                           <input type="hidden" name="id" value="{{ user.id }}" />
                         </form>
@@ -45,4 +59,18 @@
         </div>
     </div>
 </div>
+  {% block scripts %}
+    <script>
+      $(document).ready(function(){
+        $('[data-toggle="tooltip"]').tooltip();
+      });
+    </script>
+    <script>
+      $(document).ready(function(){
+        $('[data-toggle=confirmation]').confirmation({
+          rootSelector: '[data-toggle=confirmation]'
+        });
+      });
+    </script>
+  {% endblock %}
 {% endblock %}

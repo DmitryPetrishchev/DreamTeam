@@ -35,25 +35,31 @@
                       <td>
                         {% url 'src:roadmap_statistics' roadmap.id as stat_url %}
                         <div class="btn-toolbar rmp" role="toolbar">
-                          <form action="{{ stat_url }}" method="get">
-                            <button class="btn btn-primary btn-xs" title="Статистика" data-toggle="tooltip" data-placement="left">
-                              <i class="fa fa-pie-chart"></i>
-                            </button>
+                          <form id="stat {{ roadmap.id }}" action="{{ stat_url }}" method="get">
                           </form>
+                          <button form="stat {{ roadmap.id }}" class="btn btn-primary btn-xs" title="Статистика" data-toggle="tooltip" data-placement="left">
+                            <i class="fa fa-pie-chart"></i>
+                          </button>
                           {% url 'src:roadmap_tasks' roadmap.id as tasks_url %}
-                          <form action="{{ tasks_url }}" method="get">
-                            <button class="btn btn-primary btn-xs" title="Задачи" data-toggle="tooltip" data-placement="bottom">
-                              <i class="fa fa-list"></i>
-                            </button>
+                          <form id="tasks {{ roadmap.id }}" action="{{ tasks_url }}" method="get">
                           </form>
+                          <button form="tasks {{ roadmap.id }}" class="btn btn-primary btn-xs" title="Задачи" data-toggle="tooltip" data-placement="bottom">
+                            <i class="fa fa-list"></i>
+                          </button>
                           {% url 'src:roadmap_delete' as delete_url %}
-                          <form action="{{ delete_url }}" method="post">
+                          <form id="delete {{ roadmap.id }}" action="{{ delete_url }}" method="post">
                             {% csrf_token %}
                             <input type="hidden" name="id" value="{{ roadmap.id }}" />
-                            <button class="btn btn-danger btn-xs" title="Удалить" data-toggle="tooltip" data-placement="right">
-                              <i class="fa fa-trash-o"></i>
-                            </button>
                           </form>
+                          <button form="delete {{ roadmap.id }}" type="submit" class="btn btn-danger btn-xs"
+                           data-toggle="confirmation" data-singleton="true" data-popout="true"
+                           data-placement="top" data-btn-ok-label="Да"
+                           data-btn-ok-icon="glyphicon glyphicon-share-alt" data-btn-ok-class="btn-success btn-sm"
+                           data-btn-cancel-label="Нет" data-btn-cancel-icon="glyphicon glyphicon-ban-circle"
+                           data-btn-cancel-class="btn-danger btn-sm" data-title="Удалить список задач?"
+                           data-content="Подтвердите действие">
+                            <i class="fa fa-trash-o"></i>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -82,8 +88,15 @@
 
   {% block scripts %}
     <script>
-      $(document).ready (function (){
+      $(document).ready(function(){
         $('[data-toggle="tooltip"]').tooltip();
+      });
+    </script>
+    <script>
+      $(document).ready(function(){
+        $('[data-toggle=confirmation]').confirmation({
+          rootSelector: '[data-toggle=confirmation]'
+        });
       });
     </script>
   {% endblock %}

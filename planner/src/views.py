@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 from random import randrange
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -12,20 +13,27 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
 from isoweek import Week
-import os
 from src.forms import TaskCreationForm, TaskChangeForm, RoadmapCreationForm, \
                       UserCreationForm, UserChangeForm, PasswordChangeForm, \
                       LoginForm, UploadImageForm
 from src.models import Task, Roadmap, Scores
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+plt.style.use('ggplot')
+import matplotlib.ticker as ticker
+
 @require_GET
 @login_required
 @transaction.atomic
-def generate_tasks(request):
+def generate_tasks(request, *, value):
     roadmap = Roadmap.objects.create(user=request.user, title='Random roadmap')
-    value = int(request.GET['value'])
+    value = int(value)
+    if value > 5000:
+        value = 5000
     for i in range(value):
-        title = 'Random task (%s)' % i
+        title = 'Random task (num=%s)' % i
         year = randrange(2007, 2020)
         month = randrange(1, 13)
         day = randrange(1, 29)
@@ -129,10 +137,11 @@ class UserChange(LoginRequiredMixin, View):
 @require_POST
 @login_required
 @transaction.atomic
-def upload_image(request):
+def image_upload(request):
     form = UploadImageForm(request.POST, request.FILES)
     if form.is_valid():
         user = request.user
+        user.image.delete()
         user.image = form.cleaned_data['image']
         user.save()
         return redirect(request.META.get('HTTP_REFERER', '/'))
@@ -142,7 +151,7 @@ def upload_image(request):
 @require_POST
 @login_required
 @transaction.atomic
-def delete_image(request):
+def image_delete(request):
     return_path = request.META.get('HTTP_REFERER', '/')
     try:
         value = int(request.POST.get('id', -1))
@@ -152,7 +161,6 @@ def delete_image(request):
         if value > 0:
             if value == request.user.id:
                 request.user.image.delete()
-                request.user.save()
             else:
                 raise Http404('У Вас недостаточно прав на удаление данного изображения.')
         else:
@@ -355,72 +363,133 @@ class TaskChange(LoginRequiredMixin, View):
             })
 
 
-@require_GET
-@login_required
-@transaction.atomic
-def roadmap_statistics(request, *, value=-1):
-    roadmap = get_object_or_404(Roadmap, id=value)
-    if roadmap.user != request.user:
-        raise Http404('У Вас недостаточно прав на просмотр статистики по данному списку задач.')
-    if hasattr(roadmap, 'tasks'):
-        tasks = roadmap.tasks.only('create_date').annotate(
-            year=ExtractYear('create_date'),
-            week=ExtractWeek('create_date')
-        )
-        scores = Scores.objects.filter(task__in=tasks).only(
-            'date',
-            'points'
-        ).annotate(
-            year=ExtractYear(
-                ExpressionWrapper(F('date'), output_field=DateField())
-            ),
-            month=ExtractMonth(
-                ExpressionWrapper(F('date'), output_field=DateField())
-            ),
-            week=ExtractWeek(
-                ExpressionWrapper(F('date'), output_field=DateField())
+class RoadmapStatistics(LoginRequiredMixin, View):
+    http_method_names = ['get', 'post']
+
+    def graph_plot(self, tasks, scores, year, id):
+        if year:
+            fig = plt.figure(num=1, figsize=(20, 10))
+            ax = plt.subplot(211)
+            plt.hist(
+                list(map(lambda x: int(x[0]), tasks.filter(year=year).values_list('week'))),
+                bins=range(1, 54),
+                facecolor='orange',
+                edgecolor='black'
             )
-        )
-        created_tasks = tasks.values('year', 'week').annotate(created=Count('week'))
-        solved_tasks = scores.values('year', 'week').annotate(solved=Count('week'))
-        points = scores.values('year', 'month').annotate(
-            points=Sum('points')
-        ).order_by('year', 'month')
+            plt.xlabel('Недели')
+            plt.ylabel('Созданные задачи')
+            plt.title('Статистика созданных задач за %s год' % year)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+            plt.xlim(1, 53)
 
-        table1 = {}
-        for tasks in (created_tasks, solved_tasks):
-            for task in tasks:
-                if not table1.get(task.get('year')):
-                    table1[task.get('year')] = {}
-                if not table1[task.get('year')].get(task.get('week')):
-                    start_date = Week(task.get('year'), task.get('week')).monday()
-                    end_date = start_date + timedelta(days=6)
-                    dates = str(start_date) + ' / ' + str(end_date)
-                    table1[task.get('year')][task.get('week')] = {
-                        'dates': dates,
-                        'created': 0,
-                        'solved': 0
-                    }
-                if task.get('created'):
-                    table1[task.get('year')][task.get('week')]['created'] = task.get('created')
-                elif task.get('solved'):
-                    table1[task.get('year')][task.get('week')]['solved'] = task.get('solved')
+            ax = plt.subplot(212)
+            plt.hist(
+                list(map(lambda x: int(x[0]), scores.filter(year=year).values_list('week'))),
+                bins=range(1, 54),
+                facecolor='green',
+                edgecolor='black'
+            )
+            plt.xlabel('Недели')
+            plt.ylabel('Решенные задачи')
+            plt.title('Статистика решенных задач за %s год' % year)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+            plt.xlim(1, 53)
 
-        table2 = {}
-        for row in points:
-            if not table2.get(row.get('year')):
-                table2[row.get('year')] = []
-            data = {
-                'month': row.get('month'),
-                'points': row.get('points')
-            }
-            table2[row.get('year')].append(data)
-    else:
-        table1 = {}
-        table2 = {}
+            path = 'users/statistics/' + 'plot%s.png' % id
+            plt.savefig(settings.MEDIA_ROOT + '/' + path, format='png', dpi=120)
+            plt.close(fig)
+            return path
+        else:
+            pass
 
-    return render(request, 'roadmap_statistics.html', {
-        'data': table1,
-        'points': table2,
-        'return_path': reverse('src:roadmap_list')
-    })
+    @transaction.atomic
+    def get(self, request, *args, value=-1, **kwargs):
+        roadmap = get_object_or_404(Roadmap, id=value)
+        if roadmap.user != request.user:
+            raise Http404('У Вас недостаточно прав на просмотр статистики по данному списку задач.')
+        if hasattr(roadmap, 'tasks'):
+            tasks = roadmap.tasks.only('create_date').annotate(
+                year=ExtractYear('create_date'),
+                week=ExtractWeek('create_date')
+            )
+            scores = Scores.objects.filter(task__in=tasks).only(
+                'date',
+                'points'
+            ).annotate(
+                year=ExtractYear(
+                    ExpressionWrapper(F('date'), output_field=DateField())
+                ),
+                month=ExtractMonth(
+                    ExpressionWrapper(F('date'), output_field=DateField())
+                ),
+                week=ExtractWeek(
+                    ExpressionWrapper(F('date'), output_field=DateField())
+                )
+            )
+            created_tasks = tasks.values('year', 'week').annotate(created=Count('week'))
+            solved_tasks = scores.values('year', 'week').annotate(solved=Count('week'))
+            points = scores.values('year', 'month').annotate(
+                points=Sum('points')
+            ).order_by('year', 'month')
+
+            if kwargs.get('graphs'):
+                kwargs['img_src'] = self.graph_plot(
+                    tasks,
+                    scores,
+                    kwargs.get('select_year'),
+                    request.user.id
+                )
+
+            table1 = {}
+            for tasks in (created_tasks, solved_tasks):
+                for task in tasks:
+                    if not table1.get(task.get('year')):
+                        table1[task.get('year')] = {}
+                    if not table1[task.get('year')].get(task.get('week')):
+                        start_date = Week(task.get('year'), task.get('week')).monday()
+                        end_date = start_date + timedelta(days=6)
+                        dates = str(start_date) + ' / ' + str(end_date)
+                        table1[task.get('year')][task.get('week')] = {
+                            'dates': dates,
+                            'created': 0,
+                            'solved': 0
+                        }
+                    if task.get('created'):
+                        table1[task.get('year')][task.get('week')]['created'] = task.get('created')
+                    elif task.get('solved'):
+                        table1[task.get('year')][task.get('week')]['solved'] = task.get('solved')
+
+            table2 = {}
+            for row in points:
+                if not table2.get(row.get('year')):
+                    table2[row.get('year')] = []
+                data = {
+                    'month': row.get('month'),
+                    'points': row.get('points')
+                }
+                table2[row.get('year')].append(data)
+
+        else:
+            table1 = {}
+            table2 = {}
+
+        return render(request, 'roadmap_statistics.html', {
+            'data': table1,
+            'points': table2,
+            'return_path': reverse('src:roadmap_list'),
+            'tables': kwargs.get('tables', False),
+            'graphs': kwargs.get('graphs', False),
+            'select_year': int(kwargs.get('select_year', -1)),
+            'img_src': kwargs.get('img_src')
+        })
+
+    def post(self, request, *args, value=-1, **kwargs):
+        data = {
+            'tables': request.POST.get('tables', False),
+            'graphs': request.POST.get('graphs', False),
+            'select_year': request.POST.get('year', None),
+        }
+
+        return self.get(request, value=value, **data)

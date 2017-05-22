@@ -24,16 +24,11 @@ class User(AbstractUser):
     phone = models.CharField(max_length=16)
     age = models.PositiveSmallIntegerField(blank=True, null=True)
     region = models.CharField(max_length=32, blank=True)
-    image = models.ImageField(
-        upload_to='users/images/',
-        default='users/images/no-img.png'
-    )
+    image = models.ImageField(upload_to='users/images/')
 
     def save(self, *args, **kwargs):
         if self.username != self.email:
             self.username = self.email
-        if bool(self.image) is False:
-            self.image = 'users/images/no-img.png'
         super(User, self).save(*args, **kwargs)
 
 

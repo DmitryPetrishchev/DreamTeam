@@ -1,12 +1,47 @@
 {% extends "base.html" %}
 {% load filters %}
+{% load static %}
 
 {% block title %}
   Статистика задач
 {% endblock %}
 
+{% block head %}
+  <link rel="stylesheet" href="{% static "css/statistics.css" %}">
+{% endblock %}
+
 {% block body %}
   <div class="container">
+
+    {% if data %}
+      <div class="row">
+        <form class="form-signin" method="post" action="">
+          {% csrf_token %}
+          <h2 class="form-signin-heading text-center">Выберите год</h2>
+          <select class="form-control" name="year">
+            {% for year, weeks in data|sort %}
+              <option value="{{ year }}">{{ year }}</option>
+            {% endfor %}
+            <option value="0">Все года</option>
+          </select>
+          <br />
+          <button name="tables" value="True" class="btn btn-primary btn-lg btn-block">
+            <i class="fa fa-table"></i> Таблицы
+          </button>
+          <button name="graphs" value="True" class="btn btn-primary btn-lg btn-block">
+            <i class="fa fa-bar-chart"></i> Графики
+          </button>
+          <button form="back" class="btn btn-primary btn-lg btn-block" type="submit">
+            <i class="fa fa-history"></i> Назад
+          </button>
+        </form>
+        <form id="back" method="get" action="{{ return_path }}">
+        </form>
+      </div>
+      <br />
+    {% endif %}
+
+    {% if tables or not data %}
     <div class="row">
       <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
         <div class="panel panel-default">
@@ -19,7 +54,7 @@
                 <thead>
                   <tr class="active">
                     <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Неделя</th>
-                    <th class="col-xs-5 col-sm-5 col-md-5 col-lg-5">Интервал</th>
+                    <th class="col-xs-5 col-sm-5 col-md-5 col-lg-5">Интервал дат</th>
                     <th class="col-xs-3 col-sm-3 col-md-3 col-lg-3">Создано</th>
                     <th class="col-xs-3 col-sm-3 col-md-3 col-lg-3">Решено</th>
                   </tr>
@@ -31,17 +66,19 @@
                     </tr>
                   {% else %}
                     {% for year, weeks in data|sort %}
-                      <tr>
-                        <td colspan="4" class="text-center info">{{ year }}</td>
-                      </tr>
-                      {% for week, data in weeks|sort %}
+                      {% if year == select_year or select_year == 0 %}
                         <tr>
-                          <td>{{ week }}</td>
-                          <td>{{ data.dates }}</td>
-                          <td>{{ data.created }}</td>
-                          <td>{{ data.solved }}</td>
+                          <td colspan="4" class="text-center info">{{ year }}</td>
                         </tr>
-                      {% endfor %}
+                        {% for week, data in weeks|sort %}
+                          <tr>
+                            <td>{{ week }}</td>
+                            <td>{{ data.dates }}</td>
+                            <td>{{ data.created }}</td>
+                            <td>{{ data.solved }}</td>
+                          </tr>
+                        {% endfor %}
+                      {% endif %}
                     {% endfor %}
                   {% endif %}
                 </tbody>
@@ -71,15 +108,17 @@
                     </tr>
                   {% else %}
                     {% for year, months in points|sort %}
-                      <tr>
-                        <td colspan="2" class="text-center info">{{ year }}</td>
-                      </tr>
-                      {% for month in months %}
+                      {% if year == select_year or select_year == 0 %}
                         <tr>
-                          <td>{{ month.month }}</td>
-                          <td>{{ month.points }}</td>
+                          <td colspan="2" class="text-center info">{{ year }}</td>
                         </tr>
-                      {% endfor %}
+                        {% for month in months %}
+                          <tr>
+                            <td>{{ month.month }}</td>
+                            <td>{{ month.points }}</td>
+                          </tr>
+                        {% endfor %}
+                      {% endif %}
                     {% endfor %}
                   {% endif %}
                 </tbody>
@@ -89,15 +128,28 @@
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="col-md-12">
-        <form method="get" action="{{ return_path }}">
-          <button class="btn btn-primary" type="submit">
-            <i class="fa fa-history"></i> Назад
-          </button>
-        </form>
+    {% endif %}
+
+    {% if graphs %}
+      <div class="row">
+        <div>
+          <div class="well well-sm">
+            <img src="{{ MEDIA_URL }}{{ img_src }}" alt="" class="img-rounded img-responsive" />
+          </div>
+        </div>
       </div>
-    </div>
+    {% endif %}
+    {% if tables or graphs or not data %}
+      <div class="row">
+        <div class="col-md-12">
+          <form method="get" action="{{ return_path }}">
+            <button class="btn btn-primary" type="submit">
+              <i class="fa fa-history"></i> Назад
+            </button>
+          </form>
+        </div>
+      </div>
+    {% endif %}
   </div>
   <br />
 {% endblock %}
