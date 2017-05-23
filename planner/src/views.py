@@ -1,23 +1,26 @@
+import os
+from hashlib import sha256
 from datetime import date, datetime, timedelta
 from random import randrange
+from isoweek import Week
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse
 from django.db import transaction
-from django.db.models import Count, DateField, ExpressionWrapper, F, Sum
+from django.db.models import Count, DateField, ExpressionWrapper, F, Sum, DurationField
 from django.db.models.functions import ExtractYear, ExtractMonth, ExtractWeek
 from django.views import View
-from django.views.decorators.http import require_http_methods, require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
-from isoweek import Week
 from src.forms import TaskCreationForm, TaskChangeForm, RoadmapCreationForm, \
                       UserCreationForm, UserChangeForm, PasswordChangeForm, \
                       LoginForm, UploadImageForm
 from src.models import Task, Roadmap, Scores
 
+#именно в таком порядке
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -28,39 +31,47 @@ import matplotlib.ticker as ticker
 @login_required
 @transaction.atomic
 def generate_tasks(request, *, value):
+    """Генерация списка с рандомными решенными и нерешенными задачами."""
+
     roadmap = Roadmap.objects.create(user=request.user, title='Random roadmap')
     value = int(value)
     if value > 5000:
         value = 5000
     for i in range(value):
         title = 'Random task (num=%s)' % i
-        year = randrange(2007, 2020)
+        year = randrange(2007, 2017)
         month = randrange(1, 13)
         day = randrange(1, 29)
         estimate = date(year, month, day)
         task = Task.objects.create(title=title, estimate=estimate, roadmap_id=roadmap.id)
-        task.create_date = estimate - timedelta(days=randrange(500, 1000))
+        task.create_date = estimate - timedelta(days=randrange(10, 1000))
         task.save()
         if randrange(0, 2):
             task.state = 'ready'
             task.save()
             score = task.scores
-            score.date = estimate - timedelta(days=randrange(0, 500))
+            score.date = estimate + timedelta(days=randrange(-10, 11))
             score.save()
     return redirect(reverse('src:main'))
 
 
 class Login(View):
+    """Аутентификация и авторизация."""
+
     http_method_names = ['get', 'post']
 
-    def get(self, request, *args, error=False, **kwargs):
+    def get(self, request, error=False):
+        """Рендеринг и вывод логин/пароль формы."""
+
         form = LoginForm()
         return render(request, 'login.html', {
             'form': form,
             'error': error,
         })
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
+        """Валидация формы, авторизация."""
+
         email = request.POST.get('email')
         password = request.POST.get('password')
         user = authenticate(username=email, password=password)
@@ -78,19 +89,27 @@ class Login(View):
 @require_GET
 @login_required
 def Logout(request):
+    """Выход."""
+
     logout(request)
     return redirect(reverse('src:login'))
 
 class Registration(View):
+    """Регистрация пользователя."""
+
     http_method_names = ['get', 'post']
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
+        """Рендеринг и вывод формы."""
+
         form = UserCreationForm()
         return render(request, 'registration.html', {
             'form': form,
         })
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
+        """Валидация формы, создание пользователя."""
+
         form = UserCreationForm(request.POST)
         if form.is_valid():
             with transaction.atomic():
@@ -105,16 +124,23 @@ class Registration(View):
 @require_GET
 @login_required
 def user_profile(request):
+    """Просмотр профиля пользователя."""
+
     form = UploadImageForm()
     return render(request, 'user_profile.html', {
         'user': request.user,
         'form': form,
     })
 
+
 class UserChange(LoginRequiredMixin, View):
+    """Редактирование профиля пользователя."""
+
     http_method_names = ['get', 'post']
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
+        """Рендеринг, заполнение и вывод формы."""
+
         request.session['return_path'] = request.META.get('HTTP_REFERER', '/')
         form = UserChangeForm(instance=request.user)
         return render(request, 'user_change.html', {
@@ -122,7 +148,9 @@ class UserChange(LoginRequiredMixin, View):
             'return_path': request.session['return_path'],
         })
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
+        """Валидация формы, сохранение изменений."""
+
         form = UserChangeForm(request.POST, instance=request.user)
         if form.is_valid():
             with transaction.atomic():
@@ -134,10 +162,13 @@ class UserChange(LoginRequiredMixin, View):
                 'return_path': request.session['return_path'],
             })
 
+
 @require_POST
 @login_required
 @transaction.atomic
 def image_upload(request):
+    """Загрузка нового аватара пользователя, удаление старого аватара."""
+
     form = UploadImageForm(request.POST, request.FILES)
     if form.is_valid():
         user = request.user
@@ -146,12 +177,15 @@ def image_upload(request):
         user.save()
         return redirect(request.META.get('HTTP_REFERER', '/'))
     else:
-        raise Http404('Что-то пошло не так при загрузке изображения.')
+        raise Http404('Неверный формат изображения.')
+
 
 @require_POST
 @login_required
 @transaction.atomic
 def image_delete(request):
+    """Удаление аватара пользователя."""
+
     return_path = request.META.get('HTTP_REFERER', '/')
     try:
         value = int(request.POST.get('id', -1))
@@ -169,9 +203,13 @@ def image_delete(request):
 
 
 class PasswordChange(LoginRequiredMixin, View):
+    """Изменение пароля пользователя."""
+
     http_method_names = ['get', 'post']
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
+        """Рендеринг и вывод формы."""
+
         request.session['return_path'] = request.META.get('HTTP_REFERER', '/')
         form = PasswordChangeForm(user=request.user)
         return render(request, 'password_change.html', {
@@ -179,7 +217,9 @@ class PasswordChange(LoginRequiredMixin, View):
             'return_path': request.session['return_path'],
         })
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
+        """Валидация формы и сохранение изменений."""
+
         form = PasswordChangeForm(user=request.user, data=request.POST)
         if form.is_valid():
             with transaction.atomic():
@@ -196,20 +236,27 @@ class PasswordChange(LoginRequiredMixin, View):
 @require_GET
 @login_required
 def main(request):
+    """Главная страница."""
     return render(request, 'main.html')
 
 
 class TaskCreate(LoginRequiredMixin, View):
+    """Создание задачи."""
+
     http_method_names = ['get', 'post']
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
+        """Рендеринг и вывод формы."""
+
         form = TaskCreationForm(user=request.user)
         return render(request, 'form.html', {
             'form': form,
             'title': 'Создание задачи',
         })
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
+        """Валидация формы и прав доступа, сохранение задачи."""
+
         form = TaskCreationForm(request.POST, user=request.user)
         if form.is_valid():
             with transaction.atomic():
@@ -227,16 +274,22 @@ class TaskCreate(LoginRequiredMixin, View):
 
 
 class RoadmapCreate(LoginRequiredMixin, View):
+    """Создание списка задач."""
+
     http_method_names = ['get', 'post']
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
+        """Рендериг и вывод формы."""
+
         form = RoadmapCreationForm()
         return render(request, 'form.html', {
             'form': form,
             'title': 'Создание списка задач'
         })
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
+        """Валидация формы, прав доступа, сохранение списка задач."""
+
         form = RoadmapCreationForm(request.POST)
         if form.is_valid():
             with transaction.atomic():
@@ -259,6 +312,8 @@ class RoadmapCreate(LoginRequiredMixin, View):
 @login_required
 @transaction.atomic
 def task_delete(request):
+    """Удаление задачи."""
+
     return_path = request.META.get('HTTP_REFERER', '/')
     try:
         value = int(request.POST.get('id', -1))
@@ -280,6 +335,8 @@ def task_delete(request):
 @login_required
 @transaction.atomic
 def roadmap_delete(request):
+    """Удаление списка задач."""
+
     return_path = request.META.get('HTTP_REFERER', '/')
     try:
         value = int(request.POST.get('id', -1))
@@ -301,6 +358,8 @@ def roadmap_delete(request):
 @login_required
 @transaction.atomic
 def task_list(request):
+    """Вывод всех задач пользователя."""
+
     tasks = Task.objects.filter(roadmap__user=request.user).order_by('state', 'estimate')
     return render(request, 'task_list.html', {'tasks': tasks})
 
@@ -309,6 +368,8 @@ def task_list(request):
 @login_required
 @transaction.atomic
 def roadmap_list(request):
+    """Вывод всех списков задач пользователя."""
+
     roadmaps = Roadmap.objects.filter(user=request.user).order_by('title')
     return render(request, 'roadmap_list.html', {'roadmaps': roadmaps})
 
@@ -317,6 +378,8 @@ def roadmap_list(request):
 @login_required
 @transaction.atomic
 def roadmap_tasks(request, *, value=-1):
+    """Вывод всех задач из списка задач, проверка прав доступа."""
+
     roadmap = get_object_or_404(Roadmap, id=value)
     if roadmap.user != request.user:
         raise Http404('У Вас недостаточно прав для просмотра данного списка задач.')
@@ -331,9 +394,13 @@ def roadmap_tasks(request, *, value=-1):
 
 
 class TaskChange(LoginRequiredMixin, View):
+    """Редактирвоание задачи."""
+
     http_method_names = ['get', 'post']
 
-    def get(self, request, *args, value=-1, **kwargs):
+    def get(self, request, *, value=-1):
+        """Рендеринг и вывод формы, проверка прав доступа."""
+
         task = get_object_or_404(Task, id=value)
         if task.roadmap.user != request.user:
             raise Http404('У Вас недостаточно прав для редактирования данной задачи.')
@@ -345,7 +412,9 @@ class TaskChange(LoginRequiredMixin, View):
             'return_path': request.session['return_path'],
         })
 
-    def post(self, request, *args, value=-1, **kwargs):
+    def post(self, request, *, value=-1):
+        """Валидация формы."""
+
         form = TaskChangeForm(request.POST, user=request.user)
         if form.is_valid():
             task = get_object_or_404(Task, id=value)
@@ -364,48 +433,143 @@ class TaskChange(LoginRequiredMixin, View):
 
 
 class RoadmapStatistics(LoginRequiredMixin, View):
+    """Вывод статистики по списку задач."""
+
     http_method_names = ['get', 'post']
 
-    def graph_plot(self, tasks, scores, year, id):
-        if year:
-            fig = plt.figure(num=1, figsize=(20, 10))
-            ax = plt.subplot(211)
+    def graph_plot(self, user, tasks, scores, year):
+        """Построение графиков на стороне сервера, сохранение графиков."""
+
+        if user.statistics:
+            user.statistics.delete()
+
+        if int(year):
+            fig = plt.figure(num=1, figsize=(20, 16))
+            ax = plt.subplot(311)
             plt.hist(
                 list(map(lambda x: int(x[0]), tasks.filter(year=year).values_list('week'))),
                 bins=range(1, 54),
                 facecolor='orange',
                 edgecolor='black'
             )
-            plt.xlabel('Недели')
-            plt.ylabel('Созданные задачи')
             plt.title('Статистика созданных задач за %s год' % year)
+            plt.xlabel('Недели')
+            plt.ylabel('Создано')
             ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
             ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
             plt.xlim(1, 53)
 
-            ax = plt.subplot(212)
+            ax = plt.subplot(312)
             plt.hist(
                 list(map(lambda x: int(x[0]), scores.filter(year=year).values_list('week'))),
                 bins=range(1, 54),
                 facecolor='green',
                 edgecolor='black'
             )
-            plt.xlabel('Недели')
-            plt.ylabel('Решенные задачи')
             plt.title('Статистика решенных задач за %s год' % year)
+            plt.xlabel('Недели')
+            plt.ylabel('Решено')
             ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
             ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
             plt.xlim(1, 53)
 
-            path = 'users/statistics/' + 'plot%s.png' % id
-            plt.savefig(settings.MEDIA_ROOT + '/' + path, format='png', dpi=120)
+            ax = plt.subplot(313)
+            data = scores.filter(year=year).annotate(
+                solved_date=ExpressionWrapper(F('date'), output_field=DateField())
+            )
+            data = data.annotate(
+                interval=ExpressionWrapper(
+                    F('solved_date') - F('task__estimate'),
+                    output_field=DurationField()
+                )
+            )
+            plt.hist(
+                list(map(lambda x: x[0].days, data.values_list('interval'))),
+                bins=range(-10, 11),
+                facecolor='purple',
+                edgecolor='black'
+            )
+            plt.title('Статистика отклонений от дедлайна в пределах 10 дней за %s год' % year)
+            plt.xlabel('Дни')
+            plt.ylabel('Решено')
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+            plt.xlim(-10, 10)
+
+            media_path = 'users/statistics/'
+            filename = sha256(str(datetime.now()).encode()).hexdigest()
+            full_path = os.path.join(settings.MEDIA_ROOT, media_path, filename)
+            plt.savefig(full_path, format='png', dpi=300)
             plt.close(fig)
-            return path
+
+            user.statistics = os.path.join(media_path, filename)
+            user.save()
+
         else:
-            pass
+            fig = plt.figure(num=1, figsize=(20, 16))
+            ax = plt.subplot(311)
+            list1 = list(map(lambda x: int(x[0]), tasks.values_list('year')))
+            plt.hist(
+                list1,
+                bins=range(min(list1), max(list1) + 1),
+                facecolor='orange',
+                edgecolor='black'
+            )
+            plt.title('Статистика созданных задач за все года')
+            plt.xlabel('Года')
+            plt.ylabel('Создано')
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            plt.xlim(min(list1), max(list1))
+
+            ax = plt.subplot(312)
+            list2 = list(map(lambda x: int(x[0]), scores.values_list('year')))
+            plt.hist(
+                list2,
+                bins=range(min(list2), max(list2) + 1),
+                facecolor='green',
+                edgecolor='black'
+            )
+            plt.title('Статистика решенных задач за все года')
+            plt.xlabel('Года')
+            plt.ylabel('Решено')
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            plt.xlim(min(list2), max(list2))
+
+            ax = plt.subplot(313)
+            data = scores.annotate(
+                solved_date=ExpressionWrapper(F('date'), output_field=DateField())
+            )
+            data = data.annotate(
+                interval=ExpressionWrapper(
+                    F('solved_date') - F('task__estimate'),
+                    output_field=DurationField()
+                )
+            )
+            plt.hist(
+                list(map(lambda x: x[0].days, data.values_list('interval'))),
+                bins=range(-10, 11),
+                facecolor='purple',
+                edgecolor='black'
+            )
+            plt.title('Статистика отклонений от дедлайна в пределах 10 дней за все года')
+            plt.xlabel('Дни')
+            plt.ylabel('Решено')
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            plt.xlim(-10, 10)
+
+            media_path = 'users/statistics/'
+            filename = sha256(str(datetime.now()).encode()).hexdigest()
+            full_path = os.path.join(settings.MEDIA_ROOT, media_path, filename)
+            plt.savefig(full_path, format='png', dpi=300)
+            plt.close(fig)
+
+            user.statistics = os.path.join(media_path, filename)
+            user.save()
 
     @transaction.atomic
-    def get(self, request, *args, value=-1, **kwargs):
+    def get(self, request, *, value=-1, **kwargs):
+        """Рендеринг и вывод страницы, проверка прав доступа."""
+
         roadmap = get_object_or_404(Roadmap, id=value)
         if roadmap.user != request.user:
             raise Http404('У Вас недостаточно прав на просмотр статистики по данному списку задач.')
@@ -414,9 +578,9 @@ class RoadmapStatistics(LoginRequiredMixin, View):
                 year=ExtractYear('create_date'),
                 week=ExtractWeek('create_date')
             )
-            scores = Scores.objects.filter(task__in=tasks).only(
+            scores = Scores.objects.filter(task__roadmap=roadmap).only(
                 'date',
-                'points'
+                'points',
             ).annotate(
                 year=ExtractYear(
                     ExpressionWrapper(F('date'), output_field=DateField())
@@ -435,11 +599,11 @@ class RoadmapStatistics(LoginRequiredMixin, View):
             ).order_by('year', 'month')
 
             if kwargs.get('graphs'):
-                kwargs['img_src'] = self.graph_plot(
+                self.graph_plot(
+                    request.user,
                     tasks,
                     scores,
-                    kwargs.get('select_year'),
-                    request.user.id
+                    kwargs.get('select_year')
                 )
 
             table1 = {}
@@ -478,14 +642,17 @@ class RoadmapStatistics(LoginRequiredMixin, View):
         return render(request, 'roadmap_statistics.html', {
             'data': table1,
             'points': table2,
+            'user': request.user,
             'return_path': reverse('src:roadmap_list'),
             'tables': kwargs.get('tables', False),
             'graphs': kwargs.get('graphs', False),
             'select_year': int(kwargs.get('select_year', -1)),
-            'img_src': kwargs.get('img_src')
         })
 
-    def post(self, request, *args, value=-1, **kwargs):
+
+    def post(self, request, *, value=-1):
+        """Обработка запроса пользователя."""
+
         data = {
             'tables': request.POST.get('tables', False),
             'graphs': request.POST.get('graphs', False),
