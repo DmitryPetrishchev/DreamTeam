@@ -437,6 +437,7 @@ class RoadmapStatistics(LoginRequiredMixin, View):
 
     http_method_names = ['get', 'post']
 
+    @transaction.atomic
     def graph_plot(self, user, tasks, scores, year):
         """Построение графиков на стороне сервера, сохранение графиков."""
 
@@ -444,8 +445,9 @@ class RoadmapStatistics(LoginRequiredMixin, View):
             user.statistics.delete()
 
         if int(year):
-            fig = plt.figure(num=1, figsize=(20, 16))
-            ax = plt.subplot(311)
+            fig = plt.figure(num=1, figsize=(20, 25))
+
+            ax = plt.subplot(411)
             plt.hist(
                 list(map(lambda x: int(x[0]), tasks.filter(year=year).values_list('week'))),
                 bins=range(1, 54),
@@ -459,7 +461,7 @@ class RoadmapStatistics(LoginRequiredMixin, View):
             ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
             plt.xlim(1, 53)
 
-            ax = plt.subplot(312)
+            ax = plt.subplot(412)
             plt.hist(
                 list(map(lambda x: int(x[0]), scores.filter(year=year).values_list('week'))),
                 bins=range(1, 54),
@@ -473,7 +475,28 @@ class RoadmapStatistics(LoginRequiredMixin, View):
             ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
             plt.xlim(1, 53)
 
-            ax = plt.subplot(313)
+            ax = plt.subplot(413)
+            x = list(range(1, 54))
+            y = []
+            for week in x:
+                y.append(scores.filter(year=year, week=week).aggregate(sum=Sum('points')).get('sum'))
+                if not y[-1]:
+                    y[-1] = 0
+            plt.plot(x, y)
+            plt.title('Статистика заработанных очков за %s год' % year)
+            plt.xlabel('Недели')
+            plt.ylabel('Очки')
+            plt.text(
+                x[0],
+                max(y),
+                'Всего заработано %s очков' % sum(y),
+                bbox={'facecolor': 'green', 'alpha': 0.5},
+                fontsize=16
+            )
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            plt.xlim(x[0], x[-1])
+
+            ax = plt.subplot(414)
             data = scores.filter(year=year).annotate(
                 solved_date=ExpressionWrapper(F('date'), output_field=DateField())
             )
@@ -493,7 +516,6 @@ class RoadmapStatistics(LoginRequiredMixin, View):
             plt.xlabel('Дни')
             plt.ylabel('Решено')
             ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            #ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
             plt.xlim(-10, 10)
 
             media_path = 'users/statistics/'
@@ -504,10 +526,10 @@ class RoadmapStatistics(LoginRequiredMixin, View):
 
             user.statistics = os.path.join(media_path, filename)
             user.save()
-
         else:
-            fig = plt.figure(num=1, figsize=(20, 16))
-            ax = plt.subplot(311)
+            fig = plt.figure(num=1, figsize=(20, 25))
+
+            ax = plt.subplot(411)
             list1 = list(map(lambda x: int(x[0]), tasks.values_list('year')))
             plt.hist(
                 list1,
@@ -521,7 +543,7 @@ class RoadmapStatistics(LoginRequiredMixin, View):
             ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
             plt.xlim(min(list1), max(list1))
 
-            ax = plt.subplot(312)
+            ax = plt.subplot(412)
             list2 = list(map(lambda x: int(x[0]), scores.values_list('year')))
             plt.hist(
                 list2,
@@ -535,7 +557,28 @@ class RoadmapStatistics(LoginRequiredMixin, View):
             ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
             plt.xlim(min(list2), max(list2))
 
-            ax = plt.subplot(313)
+            ax = plt.subplot(413)
+            x = list(range(min(list2), max(list2) + 1))
+            y = []
+            for i in x:
+                y.append(scores.filter(year=i).aggregate(sum=Sum('points')).get('sum'))
+                if not y[-1]:
+                    y[-1] = 0
+            plt.plot(x, y)
+            plt.title('Статистика заработанных очков за все года')
+            plt.xlabel('Недели')
+            plt.ylabel('Очки')
+            plt.text(
+                x[0],
+                max(y),
+                'Всего заработано %s очков' % sum(y),
+                bbox={'facecolor': 'green', 'alpha': 0.5},
+                fontsize=16
+            )
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            plt.xlim(x[0], x[-1])
+
+            ax = plt.subplot(414)
             data = scores.annotate(
                 solved_date=ExpressionWrapper(F('date'), output_field=DateField())
             )

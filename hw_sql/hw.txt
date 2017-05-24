@@ -1,0 +1,69 @@
+1) Вывести все года, где были фильмы, оцененные	на 4, 5
+2) Вывести всех	обзорщиков, которые не поставили даты
+3) Вывести максимальный рейтинг фильма
+4) Вывести неоцененные фильмы
+5) Вывести обзорщиков на фильм GONE WITH THE WIND
+6) Вывести разницу между мин. и	макс. рейтингом	фильма
+
+
+1)mysql> select year from Movie natural join Rating where stars=4 or stars=5 group by year;
++------+
+| year |
++------+
+| 1937 |
+| 1939 |
+| 1981 |
+| 2009 |
++------+
+4 rows in set (0,00 sec)
+
+
+2)mysql> select name from Rating natural join Reviewer where ratingDate is NULL;
++---------------+
+| name          |
++---------------+
+| Daniel Lewis  |
+| Chris Jackson |
++---------------+
+2 rows in set (0,00 sec)
+
+
+
+3)mysql> select MAX(avg) as max_rating from (select AVG(stars) as avg from Rating group by mID) as T1;
++------------+
+| max_rating |
++------------+
+|     4.5000 |
++------------+
+1 row in set (0,00 sec)
+
+
+4)mysql> select title from Movie left join Rating on Movie.mID=Rating.mID where stars is NULL;
++-----------+
+| title     |
++-----------+
+| Star Wars |
+| Titanic   |
++-----------+
+2 rows in set (0,00 sec)
+
+
+
+5)mysql> select name from Reviewer natural join Rating where mID = (select mID from Movie where title="Gone with the Wind") group by name;
++----------------+
+| name           |
++----------------+
+| Mike Anderson  |
+| Sarah Martinez |
++----------------+
+2 rows in set (0,00 sec)
+
+
+6)mysql> select MAX(avg)-MIN(avg) as diff from (select AVG(stars) as avg from Rating group by mID) as T1;
++--------+
+| diff   |
++--------+
+| 2.0000 |
++--------+
+1 row in set (0,00 sec)
+

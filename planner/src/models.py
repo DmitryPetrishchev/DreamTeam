@@ -1,43 +1,31 @@
+import os
+from hashlib import sha256
 from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import ExpressionWrapper, F, Max
 from django.utils.deconstruct import deconstructible
-from hashlib import sha256
-import os
 
 
-#похоже на антипаттерн, но это не точно
-def update_fields(**kwargs):
-    def wrapper(cls):
-        for field, attributes in kwargs.items():
-            for attribute, value in attributes.items():
-                setattr(cls._meta.get_field(field), attribute, value)
-        return cls
-    return wrapper
-
-
-#с обычной вложенной функцией не прокатит
+#потому что с обычной вложенной функцией не прокатит
 @deconstructible
 class UploadTo(object):
     def __init__(self, path):
         self.path = path
 
     def __call__(self, instance, filename):
-        filename = sha256(str(datetime.today()).encode()).hexdigest()
+        filename = sha256(str(datetime.now()).encode()).hexdigest()
         return os.path.join(self.path, filename)
 
 
-@update_fields(
-    first_name={'blank': False},
-    last_name={'blank': False},
-    email={'blank': False, '_unique': True}
-)
 class User(AbstractUser):
+    first_name = models.CharField(max_length=32)
+    last_name = models.CharField(max_length=32)
+    email = models.EmailField(max_length=64, unique=True)
     phone = models.CharField(max_length=16)
     age = models.PositiveSmallIntegerField(blank=True, null=True)
-    region = models.CharField(max_length=32, blank=True)
+    region = models.CharField(blank=True, max_length=32)
     image = models.ImageField(blank=True, upload_to=UploadTo('users/images/'))
     statistics = models.ImageField(blank=True, upload_to='users/statistics/')
 
