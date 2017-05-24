@@ -29,13 +29,14 @@
 
 
 
-3)mysql> select MAX(avg) as max_rating from (select AVG(stars) as avg from Rating group by mID) as T1;
-+------------+
-| max_rating |
-+------------+
-|     4.5000 |
-+------------+
+3)select AVG(stars) as avg from Rating group by mID order by avg DESC limit 1;
++--------+
+| avg    |
++--------+
+| 4.5000 |
++--------+
 1 row in set (0,00 sec)
+
 
 
 4)mysql> select title from Movie left join Rating on Movie.mID=Rating.mID where stars is NULL;
@@ -49,16 +50,17 @@
 
 
 
-5)mysql> select name from Reviewer natural join Rating where mID = (select mID from Movie where title="Gone with the Wind") group by name;
-+----------------+
-| name           |
-+----------------+
-| Mike Anderson  |
-| Sarah Martinez |
-+----------------+
+5)mysql> select rID from Rating natural join Movie where title='Gone with the wind' group by rID;
++------+
+| rID  |
++------+
+|  201 |
+|  204 |
++------+
 2 rows in set (0,00 sec)
 
 
+#в один запрос нерешаемо, либо я не правильно понимаю задачу
 6)mysql> select MAX(avg)-MIN(avg) as diff from (select AVG(stars) as avg from Rating group by mID) as T1;
 +--------+
 | diff   |
@@ -66,4 +68,3 @@
 | 2.0000 |
 +--------+
 1 row in set (0,00 sec)
-
