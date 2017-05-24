@@ -82,6 +82,9 @@ class Task(models.Model):
         if not hasattr(self, 'scores'):
             if self.state == "ready":
                 Scores.objects.create(task=self, points=self.calc_points)
+        else:
+            if self.state == 'in_progress':
+                self.scores.delete()
 
     @property
     def is_failed(self):
