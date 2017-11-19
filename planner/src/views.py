@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 import matplotlib.ticker as ticker
 
+
 @require_GET
 @login_required
 @transaction.atomic
@@ -93,6 +94,7 @@ def Logout(request):
 
     logout(request)
     return redirect(reverse('src:login'))
+
 
 class Registration(View):
     """Регистрация пользователя."""
@@ -445,78 +447,53 @@ class RoadmapStatistics(LoginRequiredMixin, View):
             user.statistics.delete()
 
         if int(year):
-            fig = plt.figure(num=1, figsize=(20, 25))
+            fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(20, 25))
 
-            ax = plt.subplot(411)
-            plt.hist(
+            axes[0].hist(
                 list(map(lambda x: int(x[0]), tasks.filter(year=year).values_list('week'))),
                 bins=range(1, 54),
-                facecolor='orange',
+                facecolor='blue',
                 edgecolor='black'
             )
-            plt.title('Статистика созданных задач за %s год' % year)
-            plt.xlabel('Недели')
-            plt.ylabel('Создано')
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
-            plt.xlim(1, 53)
+            axes[0].set_title('Статистика созданных задач за %s год' % year)
+            axes[0].set_xlabel('Недели')
+            axes[0].set_ylabel('Создано')
+            axes[0].xaxis.set_major_locator(ticker.MultipleLocator(1))
+            axes[0].yaxis.set_major_locator(ticker.MultipleLocator(1))
+            axes[0].set_xlim(1, 53)
 
-            ax = plt.subplot(412)
-            plt.hist(
+            axes[1].hist(
                 list(map(lambda x: int(x[0]), scores.filter(year=year).values_list('week'))),
                 bins=range(1, 54),
                 facecolor='green',
                 edgecolor='black'
             )
-            plt.title('Статистика решенных задач за %s год' % year)
-            plt.xlabel('Недели')
-            plt.ylabel('Решено')
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
-            plt.xlim(1, 53)
+            axes[1].set_title('Статистика решенных задач за %s год' % year)
+            axes[1].set_xlabel('Недели')
+            axes[1].set_ylabel('Решено')
+            axes[1].xaxis.set_major_locator(ticker.MultipleLocator(1))
+            axes[1].yaxis.set_major_locator(ticker.MultipleLocator(1))
+            axes[1].set_xlim(1, 53)
 
-            ax = plt.subplot(413)
             x = list(range(1, 54))
             y = []
             for week in x:
                 y.append(scores.filter(year=year, week=week).aggregate(sum=Sum('points')).get('sum'))
                 if not y[-1]:
                     y[-1] = 0
-            plt.plot(x, y)
-            plt.title('Статистика заработанных очков за %s год' % year)
-            plt.xlabel('Недели')
-            plt.ylabel('Очки')
-            plt.text(
+            axes[2].plot(x, y)
+            axes[2].set_title('Статистика заработанных очков за %s год' % year)
+            axes[2].set_xlabel('Недели')
+            axes[2].set_ylabel('Очки')
+            axes[2].text(
                 x[0],
                 max(y),
-                'Всего заработано %s очков' % sum(y),
+                s='Всего заработано %s очков' % sum(y),
                 bbox={'facecolor': 'green', 'alpha': 0.5},
                 fontsize=16
             )
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            plt.xlim(x[0], x[-1])
-
-            ax = plt.subplot(414)
-            data = scores.filter(year=year).annotate(
-                solved_date=ExpressionWrapper(F('date'), output_field=DateField())
-            )
-            data = data.annotate(
-                interval=ExpressionWrapper(
-                    F('solved_date') - F('task__estimate'),
-                    output_field=DurationField()
-                )
-            )
-            plt.hist(
-                list(map(lambda x: x[0].days, data.values_list('interval'))),
-                bins=range(-10, 11),
-                facecolor='purple',
-                edgecolor='black'
-            )
-            plt.title('Статистика отклонений от дедлайна в пределах 10 дней за %s год' % year)
-            plt.xlabel('Дни')
-            plt.ylabel('Решено')
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            plt.xlim(-10, 10)
+            axes[2].xaxis.set_major_locator(ticker.MultipleLocator(1))
+            axes[2].set_xlim(x[0], x[-1])
 
             media_path = 'users/statistics/'
             filename = sha256(str(datetime.now()).encode()).hexdigest()
@@ -527,78 +504,53 @@ class RoadmapStatistics(LoginRequiredMixin, View):
             user.statistics = os.path.join(media_path, filename)
             user.save()
         else:
-            fig = plt.figure(num=1, figsize=(20, 25))
+            fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(20, 25))
 
-            ax = plt.subplot(411)
             list1 = list(map(lambda x: int(x[0]), tasks.values_list('year')))
-            plt.hist(
+            axes[0].hist(
                 list1,
                 bins=range(min(list1), max(list1) + 1),
-                facecolor='orange',
+                facecolor='blue',
                 edgecolor='black'
             )
-            plt.title('Статистика созданных задач за все года')
-            plt.xlabel('Года')
-            plt.ylabel('Создано')
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            plt.xlim(min(list1), max(list1))
+            axes[0].set_title('Статистика созданных задач за все года')
+            axes[0].set_xlabel('Года')
+            axes[0].set_ylabel('Создано')
+            axes[0].xaxis.set_major_locator(ticker.MultipleLocator(1))
+            axes[0].set_xlim(min(list1), max(list1))
 
-            ax = plt.subplot(412)
             list2 = list(map(lambda x: int(x[0]), scores.values_list('year')))
-            plt.hist(
+            axes[1].hist(
                 list2,
                 bins=range(min(list2), max(list2) + 1),
                 facecolor='green',
                 edgecolor='black'
             )
-            plt.title('Статистика решенных задач за все года')
-            plt.xlabel('Года')
-            plt.ylabel('Решено')
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            plt.xlim(min(list2), max(list2))
+            axes[1].set_title('Статистика решенных задач за все года')
+            axes[1].set_xlabel('Года')
+            axes[1].set_ylabel('Решено')
+            axes[1].xaxis.set_major_locator(ticker.MultipleLocator(1))
+            axes[1].set_xlim(min(list2), max(list2))
 
-            ax = plt.subplot(413)
             x = list(range(min(list2), max(list2) + 1))
             y = []
             for i in x:
                 y.append(scores.filter(year=i).aggregate(sum=Sum('points')).get('sum'))
                 if not y[-1]:
                     y[-1] = 0
-            plt.plot(x, y)
-            plt.title('Статистика заработанных очков за все года')
-            plt.xlabel('Недели')
-            plt.ylabel('Очки')
-            plt.text(
+            axes[2].plot(x, y)
+            axes[2].set_title('Статистика заработанных очков за все года')
+            axes[2].set_xlabel('Недели')
+            axes[2].set_ylabel('Очки')
+            axes[2].text(
                 x[0],
                 max(y),
                 'Всего заработано %s очков' % sum(y),
                 bbox={'facecolor': 'green', 'alpha': 0.5},
                 fontsize=16
             )
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            plt.xlim(x[0], x[-1])
-
-            ax = plt.subplot(414)
-            data = scores.annotate(
-                solved_date=ExpressionWrapper(F('date'), output_field=DateField())
-            )
-            data = data.annotate(
-                interval=ExpressionWrapper(
-                    F('solved_date') - F('task__estimate'),
-                    output_field=DurationField()
-                )
-            )
-            plt.hist(
-                list(map(lambda x: x[0].days, data.values_list('interval'))),
-                bins=range(-10, 11),
-                facecolor='purple',
-                edgecolor='black'
-            )
-            plt.title('Статистика отклонений от дедлайна в пределах 10 дней за все года')
-            plt.xlabel('Дни')
-            plt.ylabel('Решено')
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            plt.xlim(-10, 10)
+            axes[2].xaxis.set_major_locator(ticker.MultipleLocator(1))
+            axes[2].set_xlim(x[0], x[-1])
 
             media_path = 'users/statistics/'
             filename = sha256(str(datetime.now()).encode()).hexdigest()
@@ -691,7 +643,6 @@ class RoadmapStatistics(LoginRequiredMixin, View):
             'graphs': kwargs.get('graphs', False),
             'select_year': int(kwargs.get('select_year', -1)),
         })
-
 
     def post(self, request, *, value=-1):
         """Обработка запроса пользователя."""

@@ -4,6 +4,7 @@ from django.contrib.auth import forms as auth_forms
 from django.utils.translation import ugettext_lazy as _
 from src.models import Task, Roadmap, User
 
+
 class UserCreationForm(auth_forms.UserCreationForm):
     def __init__(self, *args, **kwargs):
         super(UserCreationForm, self).__init__(*args, **kwargs)
@@ -50,6 +51,7 @@ class UserCreationForm(auth_forms.UserCreationForm):
             'placeholder': 'Подтвердите пароль',
             'maxlength': '16',
         })
+
     class Meta(auth_forms.UserCreationForm.Meta):
         model = User
         fields = [
@@ -152,6 +154,7 @@ class UserChangeForm(forms.ModelForm):
             'placeholder': 'Введите регион',
             'maxlength': '32',
         })
+
     class Meta:
         model = User
         fields = [
@@ -171,8 +174,9 @@ class UserChangeForm(forms.ModelForm):
             'region': _('Регион'),
         }
 
+
 class TaskCreationForm(forms.ModelForm):
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, user=None,  **kwargs):
         super(TaskCreationForm, self).__init__(*args, **kwargs)
         self.fields['title'].widget.attrs.update({
             'class': 'form-control',
@@ -183,6 +187,7 @@ class TaskCreationForm(forms.ModelForm):
             'class': 'form-control'
         })
         self.fields['roadmap'].queryset = Roadmap.objects.filter(user=user)
+
     class Meta:
         model = Task
         fields = [
@@ -206,15 +211,17 @@ class TaskCreationForm(forms.ModelForm):
             )
         return self.cleaned_data['estimate']
 
+
 class TaskChangeForm(TaskCreationForm):
     def __init__(self, *args, **kwargs):
         super(TaskChangeForm, self).__init__(*args, **kwargs)
         self.fields['state'].widget.attrs.update({
             'class': 'form-control',
         })
+
     class Meta(TaskCreationForm.Meta):
         model = Task
-        fields = TaskCreationForm.Meta.fields + ['state',]
+        fields = TaskCreationForm.Meta.fields + ['state', ]
         labels = TaskCreationForm.Meta.labels
         labels.update({'state': _('Статус задачи')})
 
@@ -227,12 +234,14 @@ class RoadmapCreationForm(forms.ModelForm):
             'placeholder': 'Введите название списка задач',
             'maxlength': '64',
         })
+
     class Meta:
         model = Roadmap
-        fields = ['title',]
+        fields = ['title', ]
         labels = {
             'title': _('Название'),
         }
+
 
 class UploadImageForm(forms.Form):
     def __init__(self, *args, **kwargs):

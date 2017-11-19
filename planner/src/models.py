@@ -113,6 +113,7 @@ class Task(models.Model):
                  max_estimate
         return points
 
+
 class Scores(models.Model):
     task = models.OneToOneField(
         to=Task,
